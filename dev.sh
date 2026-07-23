@@ -15,11 +15,6 @@ for command_name in tmux go npm; do
   fi
 done
 
-if [[ "${1:-}" == "--restart" ]] && tmux has-session -t "$SESSION_NAME" 2>/dev/null; then
-  echo "Stopping the existing Finlo development session..."
-  tmux kill-session -t "$SESSION_NAME"
-fi
-
 open_dev_window() {
   if command -v ghostty >/dev/null 2>&1; then
     ghostty \
