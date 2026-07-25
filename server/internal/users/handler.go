@@ -3,6 +3,7 @@ package users
 import (
 	"net/http"
 
+	"github.com/kinqbert/finlo/server/internal/apierror"
 	"github.com/labstack/echo/v5"
 )
 
@@ -20,20 +21,19 @@ func (h *Handler) RegisterRoutes(e *echo.Echo) {
 }
 
 func (h *Handler) CreateUser(c *echo.Context) error {
-	var input CreateUserInput
+	var input CreateUserDTO
 
-	err := c.Bind(&input)
-
-	if err != nil {
-		handleError(c, err)
-		return nil
+	if err := c.Bind(&input); err != nil {
+		return apierror.BadRequest(
+			"invalid_request_body",
+			"request body is invalid",
+		)
 	}
 
 	user, err := h.service.CreateUser(c.Request().Context(), input)
 
 	if err != nil {
-		handleError(c, err)
-		return nil
+		return err
 	}
 
 	return c.JSON(http.StatusCreated, MapUserToResponse(user))
@@ -45,8 +45,7 @@ func (h *Handler) GetUserByID(c *echo.Context) error {
 	user, err := h.service.GetByID(c.Request().Context(), id)
 
 	if err != nil {
-		handleError(c, err)
-		return nil
+		return err
 	}
 
 	return c.JSON(http.StatusOK, MapUserToResponse(user))

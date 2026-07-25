@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/kinqbert/finlo/server/internal/apierror"
 	"github.com/kinqbert/finlo/server/internal/config"
 	"github.com/kinqbert/finlo/server/internal/database"
 	"github.com/kinqbert/finlo/server/internal/users"
@@ -29,6 +30,7 @@ func main() {
 
 	e := echo.New()
 
+	e.HTTPErrorHandler = apierror.Handler
 	e.Use(middleware.RequestLogger())
 	e.Use(middleware.Recover())
 
