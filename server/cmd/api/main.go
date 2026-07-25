@@ -5,16 +5,16 @@ import (
 	"net/http"
 
 	"github.com/kinqbert/finlo/server/internal/apierror"
+	"github.com/kinqbert/finlo/server/internal/auth"
 	"github.com/kinqbert/finlo/server/internal/config"
 	"github.com/kinqbert/finlo/server/internal/database"
-	"github.com/kinqbert/finlo/server/internal/users"
 	"github.com/labstack/echo/v5"
 	"github.com/labstack/echo/v5/middleware"
 	"gorm.io/gorm"
 )
 
-func setupHandlers(e *echo.Echo, db *gorm.DB) {
-	users.Setup(e, db)
+func setupHandlers(e *echo.Echo, db *gorm.DB, cfg *config.Config) {
+	auth.Setup(e, db, &cfg.JWT)
 }
 
 func main() {
@@ -34,7 +34,7 @@ func main() {
 	e.Use(middleware.RequestLogger())
 	e.Use(middleware.Recover())
 
-	setupHandlers(e, db)
+	setupHandlers(e, db, &cfg)
 
 	e.GET("/", func(c *echo.Context) error {
 		return c.JSON(http.StatusOK, map[string]string{"message": "Hello, World!"})

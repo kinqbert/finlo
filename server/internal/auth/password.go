@@ -1,4 +1,4 @@
-package users
+package auth
 
 import (
 	"fmt"
@@ -63,8 +63,7 @@ func validatePassword(password string) error {
 
 	if len(violations) > 0 {
 		return fmt.Errorf(
-			"%w: password must contain %s",
-			ErrInvalidPassword,
+			"invalid password: password must contain %s",
 			strings.Join(violations, ", "),
 		)
 	}
@@ -83,4 +82,14 @@ func hashPassword(password string) (string, error) {
 	}
 
 	return string(hash), nil
+}
+
+func ComparePassword(passwordHash, password string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(passwordHash), []byte(password))
+
+	if err != nil {
+		return false
+	}
+
+	return true
 }

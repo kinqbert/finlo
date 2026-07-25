@@ -1,4 +1,4 @@
-package users
+package auth
 
 import (
 	"context"
@@ -27,6 +27,22 @@ func (r *Repository) FindByID(ctx context.Context, id string) (User, error) {
 	if err != nil {
 		return User{}, apierror.Internal(
 			fmt.Errorf("find user by ID: %w", err),
+		)
+	}
+
+	return user, nil
+}
+
+func (r *Repository) FindByEmail(ctx context.Context, email string) (User, error) {
+	user, err := gorm.G[User](r.db).Where("email = ?", email).First(ctx)
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return User{}, apierror.NotFound("user_not_found", "user was not found")
+	}
+
+	if err != nil {
+		return User{}, apierror.Internal(
+			fmt.Errorf("find user by email: %w", err),
 		)
 	}
 

@@ -10,6 +10,7 @@ import (
 type Config struct {
 	Database DatabaseConfig
 	Port     string
+	JWT      JWTConfig
 }
 
 type DatabaseConfig struct {
@@ -21,12 +22,29 @@ type DatabaseConfig struct {
 	SSLMode  string
 }
 
+type JWTConfig struct {
+	AccessSecret  string
+	RefreshSecret string
+	Issuer        string
+	Audience      string
+}
+
 func (d DatabaseConfig) GetDSN() string {
 	return fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s", d.Host, d.User, d.Password, d.Name, d.Port, d.SSLMode)
 }
 
 func Load() (Config, error) {
 	godotenv.Load()
+
+	accessSecret := os.Getenv("JWT_ACCESS_SECRET")
+	if accessSecret == "" {
+		return Config{}, fmt.Errorf("JWT_ACCESS_SECRET is required")
+	}
+
+	refreshSecret := os.Getenv("JWT_REFRESH_SECRET")
+	if refreshSecret == "" {
+		return Config{}, fmt.Errorf("JWT_REFRESH_SECRET is required")
+	}
 
 	cfg := Config{
 		Port: envOrDefault("PORT", "8080"),
@@ -37,6 +55,12 @@ func Load() (Config, error) {
 			Password: envOrDefault("DB_PASSWORD", "postgres"),
 			Name:     envOrDefault("DB_NAME", "finlo"),
 			SSLMode:  envOrDefault("DB_SSL_MODE", "disable"),
+		},
+		JWT: JWTConfig{
+			AccessSecret:  accessSecret,
+			RefreshSecret: refreshSecret,
+			Issuer:        envOrDefault("JWT_ISSUER", "finlo-api"),
+			Audience:      envOrDefault("JWT_AUDIENCE", "finlo-app"),
 		},
 	}
 

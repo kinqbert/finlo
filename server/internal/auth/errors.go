@@ -1,4 +1,4 @@
-package users
+package auth
 
 import (
 	"errors"
@@ -10,7 +10,6 @@ import (
 var (
 	ErrNotFound        = errors.New("user not found")
 	ErrInvalidInput    = errors.New("invalid input")
-	ErrInvalidPassword = errors.New("invalid password")
 )
 
 func handleError(c *echo.Context, err error) error {
