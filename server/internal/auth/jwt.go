@@ -114,7 +114,6 @@ func (s *TokenService) parse(rawToken string, tokenType string) (string, error) 
 		jwt.WithValidMethods([]string{
 			jwt.SigningMethodHS256.Alg(),
 		}),
-		jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()}),
 		jwt.WithIssuer(s.issuer),
 		jwt.WithAudience(s.audience),
 		jwt.WithExpirationRequired(),

@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/kinqbert/finlo/server/internal/apierror"
 	"gorm.io/gorm"
 )
 
@@ -21,13 +20,11 @@ func (r *Repository) FindByID(ctx context.Context, id string) (User, error) {
 	user, err := gorm.G[User](r.db).Where("id = ?", id).First(ctx)
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return User{}, apierror.NotFound("user_not_found", "user was not found")
+		return User{}, ErrUserNotFound
 	}
 
 	if err != nil {
-		return User{}, apierror.Internal(
-			fmt.Errorf("find user by ID: %w", err),
-		)
+		return User{}, fmt.Errorf("find user by ID: %w", err)
 	}
 
 	return user, nil
@@ -37,13 +34,11 @@ func (r *Repository) FindByEmail(ctx context.Context, email string) (User, error
 	user, err := gorm.G[User](r.db).Where("email = ?", email).First(ctx)
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return User{}, apierror.NotFound("user_not_found", "user was not found")
+		return User{}, ErrUserNotFound
 	}
 
 	if err != nil {
-		return User{}, apierror.Internal(
-			fmt.Errorf("find user by email: %w", err),
-		)
+		return User{}, fmt.Errorf("find user by email: %w", err)
 	}
 
 	return user, nil
@@ -52,25 +47,13 @@ func (r *Repository) FindByEmail(ctx context.Context, email string) (User, error
 func (r *Repository) CreateUser(ctx context.Context, user *User) error {
 	err := gorm.G[User](r.db).Create(ctx, user)
 
+	if errors.Is(err, gorm.ErrDuplicatedKey) {
+		return ErrEmailAlreadyExists
+	}
+
 	if err != nil {
-		return apierror.Internal(err)
+		return fmt.Errorf("create user: %w", err)
 	}
 
 	return nil
-}
-
-func (r *Repository) DeleteByID(ctx context.Context, id string) (int, error) {
-	rowsAffected, err := gorm.G[User](r.db).Where("id = ?", id).Delete(ctx)
-
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return 0, apierror.NotFound("user_not_found", "user was not found")
-	}
-
-	if err != nil {
-		return 0, apierror.Internal(
-			fmt.Errorf("find user by ID: %w", err),
-		)
-	}
-
-	return rowsAffected, nil
 }

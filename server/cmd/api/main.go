@@ -20,12 +20,12 @@ func setupHandlers(e *echo.Echo, db *gorm.DB, cfg *config.Config) {
 func main() {
 	cfg, err := config.Load()
 	if err != nil {
-		log.Fatal("Error loading environment variables")
+		log.Fatalf("load configuration: %v", err)
 	}
 
 	db, err := database.OpenConnection(&cfg.Database)
 	if err != nil {
-		log.Fatal("Error opening connection to database: %w", err)
+		log.Fatalf("open database: %v", err)
 	}
 
 	e := echo.New()
@@ -40,7 +40,7 @@ func main() {
 		return c.JSON(http.StatusOK, map[string]string{"message": "Hello, World!"})
 	})
 
-	if err := e.Start(":8080"); err != nil {
+	if err := e.Start(":" + cfg.Port); err != nil {
 		e.Logger.Error("failed to start server", "error", err)
 	}
 }

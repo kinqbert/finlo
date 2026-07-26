@@ -2,46 +2,19 @@ package auth
 
 import (
 	"errors"
-	"net/http"
 
-	"github.com/labstack/echo/v5"
+	"github.com/kinqbert/finlo/server/internal/apierror"
 )
 
 var (
-	ErrNotFound        = errors.New("user not found")
-	ErrInvalidInput    = errors.New("invalid input")
+	ErrUserNotFound       = errors.New("user not found")
+	ErrEmailAlreadyExists = errors.New("email already exists")
 )
 
-func handleError(c *echo.Context, err error) error {
-	switch {
-	case errors.Is(err, ErrInvalidInput):
-		return c.JSON(
-			http.StatusBadRequest,
-			map[string]string{
-				"error": err.Error(),
-			},
-		)
+func invalidCredentialsError() error {
+	return apierror.Unauthorized("invalid_credentials", "invalid email or password")
+}
 
-	case errors.Is(err, ErrNotFound):
-		return c.JSON(
-			http.StatusNotFound,
-			map[string]string{
-				"error": err.Error(),
-			},
-		)
-
-	default:
-		c.Logger().Error(
-			"request failed",
-			"error",
-			err,
-		)
-
-		return c.JSON(
-			http.StatusInternalServerError,
-			map[string]string{
-				"error": "internal server error",
-			},
-		)
-	}
+func invalidRefreshTokenError() error {
+	return apierror.Unauthorized("invalid_refresh_token", "refresh token is invalid or expired")
 }

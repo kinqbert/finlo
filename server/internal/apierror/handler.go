@@ -27,7 +27,7 @@ func Handler(c *echo.Context, err error) {
 			c.Logger().Error(
 				"request failed",
 				"error",
-				apiErr.Cause,
+				apiErr.cause,
 			)
 		}
 

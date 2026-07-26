@@ -1,5 +1,7 @@
 package auth
 
+import "time"
+
 type RegisterDTO struct {
 	Name     string `json:"name"`
 	Surname  string `json:"surname"`
@@ -36,7 +38,7 @@ func MapUserToDto(user User) UserDTO {
 		Name:      user.Name,
 		Surname:   user.Surname,
 		Email:     user.Email,
-		CreatedAt: user.CreatedAt.String(),
-		UpdatedAt: user.UpdatedAt.String(),
+		CreatedAt: user.CreatedAt.UTC().Format(time.RFC3339),
+		UpdatedAt: user.UpdatedAt.UTC().Format(time.RFC3339),
 	}
 }

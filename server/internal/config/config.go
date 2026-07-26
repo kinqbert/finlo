@@ -36,14 +36,13 @@ func (d DatabaseConfig) GetDSN() string {
 func Load() (Config, error) {
 	godotenv.Load()
 
-	accessSecret := os.Getenv("JWT_ACCESS_SECRET")
-	if accessSecret == "" {
-		return Config{}, fmt.Errorf("JWT_ACCESS_SECRET is required")
+	accessSecret, refreshSecret := os.Getenv("JWT_ACCESS_SECRET"), os.Getenv("JWT_REFRESH_SECRET")
+	if len(accessSecret) < 32 || len(refreshSecret) < 32 {
+		return Config{}, fmt.Errorf("Secrets have to be at least 32 symbols in length")
 	}
 
-	refreshSecret := os.Getenv("JWT_REFRESH_SECRET")
-	if refreshSecret == "" {
-		return Config{}, fmt.Errorf("JWT_REFRESH_SECRET is required")
+	if accessSecret == refreshSecret {
+		return Config{}, fmt.Errorf("Secrets cannot be the same")
 	}
 
 	cfg := Config{

@@ -6,7 +6,7 @@ type Error struct {
 	Status  int
 	Code    string
 	Message string
-	Cause   error
+	cause   error
 }
 
 func (e *Error) Error() string {
@@ -14,7 +14,7 @@ func (e *Error) Error() string {
 }
 
 func (e *Error) Unwrap() error {
-	return e.Cause
+	return e.cause
 }
 
 func New(
@@ -39,7 +39,7 @@ func Wrap(
 		Status:  status,
 		Code:    code,
 		Message: message,
-		Cause:   cause,
+		cause:   cause,
 	}
 }
 
