@@ -2,20 +2,20 @@ package auth
 
 import "time"
 
-type RegisterDTO struct {
-	Name     string `json:"name"`
-	Surname  string `json:"surname"`
-	Email    string `json:"email"`
-	Password string `json:"password"`
+type RegisterBodyDTO struct {
+	Name     string `json:"name" validate:"required,notblank,max=100"`
+	Surname  string `json:"surname" validate:"required,notblank,max=100"`
+	Email    string `json:"email" validate:"required,email,max=320"`
+	Password string `json:"password" validate:"required"`
 }
 
-type LoginDTO struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
+type LoginBodyDTO struct {
+	Email    string `json:"email" validate:"required,email,max=320"`
+	Password string `json:"password" validate:"required"`
 }
 
-type RefreshDTO struct {
-	RefreshToken string `json:"refresh_token"`
+type RefreshBodyDTO struct {
+	RefreshToken string `json:"refresh_token" validate:"required"`
 }
 
 type Tokens struct {

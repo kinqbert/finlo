@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/kinqbert/finlo/server/internal/apierror"
+	"github.com/kinqbert/finlo/server/internal/validation"
 	"github.com/labstack/echo/v5"
 )
 
@@ -27,13 +28,11 @@ func (h *Handler) RegisterRoutes(e *echo.Echo, authMiddleware *Middleware) {
 }
 
 func (h *Handler) Register(c *echo.Context) error {
-	var input RegisterDTO
+	var input RegisterBodyDTO
+	err := validation.BindAndValidateBody(c, &input)
 
-	if err := c.Bind(&input); err != nil {
-		return apierror.BadRequest(
-			"invalid_request_body",
-			"request body is invalid",
-		)
+	if err != nil {
+		return err
 	}
 
 	tokens, err := h.service.RegisterUser(c.Request().Context(), input)
@@ -46,13 +45,11 @@ func (h *Handler) Register(c *echo.Context) error {
 }
 
 func (h *Handler) Login(c *echo.Context) error {
-	var input LoginDTO
+	var input LoginBodyDTO
+	err := validation.BindAndValidateBody(c, &input)
 
-	if err := c.Bind(&input); err != nil {
-		return apierror.BadRequest(
-			"invalid_request_body",
-			"request body is invalid",
-		)
+	if err != nil {
+		return err
 	}
 
 	tokens, err := h.service.LoginUser(c.Request().Context(), input)
@@ -65,13 +62,11 @@ func (h *Handler) Login(c *echo.Context) error {
 }
 
 func (h *Handler) Refresh(c *echo.Context) error {
-	var input RefreshDTO
+	var input RefreshBodyDTO
+	err := validation.BindAndValidateBody(c, &input)
 
-	if err := c.Bind(&input); err != nil {
-		return apierror.BadRequest(
-			"invalid_request_body",
-			"request body is invalid",
-		)
+	if err != nil {
+		return err
 	}
 
 	if strings.TrimSpace(input.RefreshToken) == "" {

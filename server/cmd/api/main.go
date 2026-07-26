@@ -10,6 +10,7 @@ import (
 	"github.com/kinqbert/finlo/server/internal/config"
 	"github.com/kinqbert/finlo/server/internal/database"
 	"github.com/kinqbert/finlo/server/internal/health"
+	"github.com/kinqbert/finlo/server/internal/validation"
 	"github.com/labstack/echo/v5"
 	"github.com/labstack/echo/v5/middleware"
 	"gorm.io/gorm"
@@ -38,6 +39,7 @@ func main() {
 
 	e := echo.New()
 
+	e.Validator = validation.New()
 	e.HTTPErrorHandler = apierror.Handler
 	e.Use(middleware.RequestLogger())
 	e.Use(middleware.Recover())

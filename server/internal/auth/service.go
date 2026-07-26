@@ -39,7 +39,7 @@ func (s *Service) GetByID(ctx context.Context, id string) (User, error) {
 	return user, nil
 }
 
-func (s *Service) RegisterUser(ctx context.Context, input RegisterDTO) (Tokens, error) {
+func (s *Service) RegisterUser(ctx context.Context, input RegisterBodyDTO) (Tokens, error) {
 	email := strings.TrimSpace(strings.ToLower(input.Email))
 
 	hashedPassword, err := hashPassword(input.Password)
@@ -67,7 +67,7 @@ func (s *Service) RegisterUser(ctx context.Context, input RegisterDTO) (Tokens, 
 	return s.tokenService.Generate(user.ID)
 }
 
-func (s *Service) LoginUser(ctx context.Context, input LoginDTO) (Tokens, error) {
+func (s *Service) LoginUser(ctx context.Context, input LoginBodyDTO) (Tokens, error) {
 	email := utils.NormalizeEmail(input.Email)
 
 	user, err := s.repository.FindByEmail(ctx, email)
