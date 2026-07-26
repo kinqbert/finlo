@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 
@@ -8,13 +9,20 @@ import (
 	"github.com/kinqbert/finlo/server/internal/auth"
 	"github.com/kinqbert/finlo/server/internal/config"
 	"github.com/kinqbert/finlo/server/internal/database"
+	"github.com/kinqbert/finlo/server/internal/health"
 	"github.com/labstack/echo/v5"
 	"github.com/labstack/echo/v5/middleware"
 	"gorm.io/gorm"
 )
 
-func setupHandlers(e *echo.Echo, db *gorm.DB, cfg *config.Config) {
+func setupHandlers(e *echo.Echo, db *gorm.DB, cfg *config.Config) error {
 	auth.Setup(e, db, &cfg.JWT)
+
+	if err := health.Setup(e, db); err != nil {
+		return fmt.Errorf("set up health handler: %w", err)
+	}
+
+	return nil
 }
 
 func main() {
