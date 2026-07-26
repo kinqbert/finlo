@@ -72,6 +72,10 @@ func validatePassword(password string) error {
 }
 
 func hashPassword(password string) (string, error) {
+	if password == "" {
+		return "", apierror.BadRequest("password_required", "Password is required")
+	}
+
 	if err := validatePassword(password); err != nil {
 		return "", apierror.BadRequest("bad_password", err.Error())
 	}

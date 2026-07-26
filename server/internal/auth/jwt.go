@@ -86,14 +86,14 @@ func (s *TokenService) Generate(userId string) (Tokens, error) {
 }
 
 func (s *TokenService) ParseAccess(token string) (string, error) {
-	return s._parse(token, AccessTokenType)
+	return s.parse(token, AccessTokenType)
 }
 
 func (s *TokenService) ParseRefresh(token string) (string, error) {
-	return s._parse(token, RefreshTokenType)
+	return s.parse(token, RefreshTokenType)
 }
 
-func (s *TokenService) _parse(rawToken string, tokenType string) (string, error) {
+func (s *TokenService) parse(rawToken string, tokenType string) (string, error) {
 	var secret []byte
 
 	switch tokenType {
@@ -111,6 +111,9 @@ func (s *TokenService) _parse(rawToken string, tokenType string) (string, error)
 		func(token *jwt.Token) (any, error) {
 			return secret, nil
 		},
+		jwt.WithValidMethods([]string{
+			jwt.SigningMethodHS256.Alg(),
+		}),
 		jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()}),
 		jwt.WithIssuer(s.issuer),
 		jwt.WithAudience(s.audience),

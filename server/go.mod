@@ -3,13 +3,12 @@ module github.com/kinqbert/finlo/server
 go 1.26.4
 
 require (
+	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/joho/godotenv v1.5.1
 	github.com/labstack/echo/v5 v5.3.1
 	gorm.io/driver/postgres v1.6.0
 	gorm.io/gorm v1.31.2
 )
-
-require github.com/golang-jwt/jwt/v5 v5.3.1 // indirect
 
 require (
 	github.com/google/uuid v1.6.0

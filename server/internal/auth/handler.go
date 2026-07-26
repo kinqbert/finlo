@@ -2,6 +2,7 @@ package auth
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/kinqbert/finlo/server/internal/apierror"
 	"github.com/labstack/echo/v5"
@@ -16,7 +17,11 @@ type Handler struct {
 }
 
 func (h *Handler) RegisterRoutes(e *echo.Echo) {
-	e.POST("/auth/register", h.Register)
+	auth := e.Group("/auth")
+
+	auth.POST("/register", h.Register)
+	auth.POST("/login", h.Login)
+	auth.POST("/refresh", h.Refresh)
 }
 
 func (h *Handler) Register(c *echo.Context) error {
@@ -54,5 +59,31 @@ func (h *Handler) Login(c *echo.Context) error {
 		return err
 	}
 
-	return c.JSON(http.StatusCreated, tokens)
+	return c.JSON(http.StatusOK, tokens)
+}
+
+func (h *Handler) Refresh(c *echo.Context) error {
+	var input RefreshDTO
+
+	if err := c.Bind(&input); err != nil {
+		return apierror.BadRequest(
+			"invalid_request_body",
+			"request body is invalid",
+		)
+	}
+
+	if strings.TrimSpace(input.RefreshToken) == "" {
+		return apierror.BadRequest(
+			"refresh_token_required",
+			"refresh token is required",
+		)
+	}
+
+	tokens, err := h.service.Refresh(c.Request().Context(), input.RefreshToken)
+
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, tokens)
 }

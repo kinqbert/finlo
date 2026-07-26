@@ -54,12 +54,7 @@ func (s *Service) RegisterUser(ctx context.Context, input RegisterDTO) (Tokens, 
 		return Tokens{}, err
 	}
 
-	tokens, err := s.tokenService.Generate(user.ID)
-	if err != nil {
-		return Tokens{}, apierror.Internal(err)
-	}
-
-	return tokens, err
+	return s.tokenService.Generate(user.ID)
 }
 
 func (s *Service) LoginUser(ctx context.Context, input LoginDTO) (Tokens, error) {
@@ -67,19 +62,25 @@ func (s *Service) LoginUser(ctx context.Context, input LoginDTO) (Tokens, error)
 
 	user, err := s.repository.FindByEmail(ctx, email)
 	if err != nil {
-		return Tokens{}, err
+		return Tokens{}, apierror.Forbidden("invalid_credentials", "Wrong email and password combination")
 	}
 
-	passwordsMatch := ComparePassword(user.PasswordHash, input.Password)
-
-	if !passwordsMatch {
-		return Tokens{}, apierror.Forbidden("passwords_do_not_match", "Wrong email and password combination")
+	if !ComparePassword(user.PasswordHash, input.Password) {
+		return Tokens{}, apierror.Forbidden("invalid_credentials", "Wrong email and password combination")
 	}
 
-	tokens, err := s.tokenService.Generate(user.ID)
+	return s.tokenService.Generate(user.ID)
+}
+
+func (s *Service) Refresh(ctx context.Context, refreshToken string) (Tokens, error) {
+	userID, err := s.tokenService.ParseRefresh(refreshToken)
 	if err != nil {
-		return Tokens{}, apierror.Internal(err)
+		return Tokens{}, apierror.Unauthorized("invalid_refresh_token", "refresh token is invalid or expired")
 	}
 
-	return tokens, err
+	if _, err := s.repository.FindByID(ctx, userID); err != nil {
+		return Tokens{}, apierror.Forbidden("invalid_credentials", "Wrong email and password combination")
+	}
+
+	return s.tokenService.Generate(userID)
 }
