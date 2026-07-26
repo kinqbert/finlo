@@ -50,6 +50,30 @@ func Handler(c *echo.Context, err error) {
 		return
 	}
 
+	var statusError echo.HTTPStatusCoder
+
+	if errors.As(err, &statusError) {
+		status := statusError.StatusCode()
+
+		code := "http_error"
+
+		switch status {
+		case http.StatusNotFound:
+			code = "route_not_found"
+
+		case http.StatusMethodNotAllowed:
+			code = "method_not_allowed"
+		}
+
+		writeResponse(
+			c,
+			status,
+			code,
+			http.StatusText(status),
+		)
+		return
+	}
+
 	c.Logger().Error(
 		"unexpected request error",
 		"error",

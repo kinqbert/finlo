@@ -16,12 +16,14 @@ type Handler struct {
 	service *Service
 }
 
-func (h *Handler) RegisterRoutes(e *echo.Echo) {
+func (h *Handler) RegisterRoutes(e *echo.Echo, authMiddleware *Middleware) {
 	auth := e.Group("/auth")
 
 	auth.POST("/register", h.Register)
 	auth.POST("/login", h.Login)
 	auth.POST("/refresh", h.Refresh)
+
+	auth.GET("/me", h.Me, authMiddleware.RequireAccessToken)
 }
 
 func (h *Handler) Register(c *echo.Context) error {
@@ -86,4 +88,18 @@ func (h *Handler) Refresh(c *echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, tokens)
+}
+
+func (h *Handler) Me(c *echo.Context) error {
+	userID, err := UserIDFromContext(c)
+	if err != nil {
+		return apierror.Unauthorized("unauthorized", "unauthorized")
+	}
+
+	user, err := h.service.GetByID(c.Request().Context(), userID)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, MapUserToDto(user))
 }
