@@ -1,21 +1,20 @@
-package validation
+package validator
 
 import (
 	"reflect"
 	"strings"
 
-	"github.com/go-playground/validator/v10"
-	"github.com/kinqbert/finlo/server/internal/apierror"
-	"github.com/labstack/echo/v5"
+	playground "github.com/go-playground/validator/v10"
+	"github.com/kinqbert/finlo/server/internal/http/apierror"
 )
 
 type Validator struct {
-	validate *validator.Validate
+	validate *playground.Validate
 }
 
 func New() *Validator {
-	v := validator.New(
-		validator.WithRequiredStructEnabled(),
+	v := playground.New(
+		playground.WithRequiredStructEnabled(),
 	)
 
 	// Report JSON field names instead of Go field names.
@@ -39,7 +38,7 @@ func New() *Validator {
 
 	_ = v.RegisterValidation(
 		"notblank",
-		func(field validator.FieldLevel) bool {
+		func(field playground.FieldLevel) bool {
 			return strings.TrimSpace(
 				field.Field().String(),
 			) != ""
@@ -62,23 +61,8 @@ func (v *Validator) Validate(value any) error {
 	return nil
 }
 
-func BindAndValidateBody[T any](c *echo.Context, input *T) error {
-	if err := c.Bind(input); err != nil {
-		return apierror.BadRequest(
-			"invalid_request_body",
-			"request body is invalid",
-		)
-	}
-
-	if err := c.Validate(input); err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func validationMessage(err error) string {
-	validationErrors, ok := err.(validator.ValidationErrors)
+	validationErrors, ok := err.(playground.ValidationErrors)
 	if !ok || len(validationErrors) == 0 {
 		return "request validation failed"
 	}

@@ -3,7 +3,7 @@ package auth
 import (
 	"errors"
 
-	"github.com/kinqbert/finlo/server/internal/apierror"
+	"github.com/kinqbert/finlo/server/internal/http/apierror"
 )
 
 var (

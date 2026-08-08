@@ -6,7 +6,7 @@ import (
 	"unicode"
 	"unicode/utf8"
 
-	"github.com/kinqbert/finlo/server/internal/apierror"
+	"github.com/kinqbert/finlo/server/internal/http/apierror"
 	"golang.org/x/crypto/bcrypt"
 )
 

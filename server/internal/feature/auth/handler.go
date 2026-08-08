@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/kinqbert/finlo/server/internal/apierror"
-	"github.com/kinqbert/finlo/server/internal/validation"
+	"github.com/kinqbert/finlo/server/internal/http/apierror"
+	"github.com/kinqbert/finlo/server/internal/http/request"
 	"github.com/labstack/echo/v5"
 )
 
@@ -29,7 +29,7 @@ func (h *Handler) RegisterRoutes(e *echo.Echo, authMiddleware *Middleware) {
 
 func (h *Handler) Register(c *echo.Context) error {
 	var input RegisterBodyDTO
-	err := validation.BindAndValidateBody(c, &input)
+	err := request.BindAndValidateBody(c, &input)
 
 	if err != nil {
 		return err
@@ -46,7 +46,7 @@ func (h *Handler) Register(c *echo.Context) error {
 
 func (h *Handler) Login(c *echo.Context) error {
 	var input LoginBodyDTO
-	err := validation.BindAndValidateBody(c, &input)
+	err := request.BindAndValidateBody(c, &input)
 
 	if err != nil {
 		return err
@@ -63,7 +63,7 @@ func (h *Handler) Login(c *echo.Context) error {
 
 func (h *Handler) Refresh(c *echo.Context) error {
 	var input RefreshBodyDTO
-	err := validation.BindAndValidateBody(c, &input)
+	err := request.BindAndValidateBody(c, &input)
 
 	if err != nil {
 		return err

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/kinqbert/finlo/server/internal/config"
+	"github.com/kinqbert/finlo/server/internal/platform/config"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )

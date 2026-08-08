@@ -3,7 +3,7 @@ package auth
 import (
 	"strings"
 
-	"github.com/kinqbert/finlo/server/internal/apierror"
+	"github.com/kinqbert/finlo/server/internal/http/apierror"
 	"github.com/labstack/echo/v5"
 )
 

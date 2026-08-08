@@ -7,7 +7,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func Setup(e *echo.Echo, gormDB *gorm.DB) error {
+func RegisterRoutes(e *echo.Echo, gormDB *gorm.DB) error {
 	sqlDB, err := gormDB.DB()
 	if err != nil {
 		return fmt.Errorf(

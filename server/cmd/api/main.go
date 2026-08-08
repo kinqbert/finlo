@@ -5,21 +5,21 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/kinqbert/finlo/server/internal/apierror"
-	"github.com/kinqbert/finlo/server/internal/auth"
-	"github.com/kinqbert/finlo/server/internal/config"
-	"github.com/kinqbert/finlo/server/internal/database"
-	"github.com/kinqbert/finlo/server/internal/health"
-	"github.com/kinqbert/finlo/server/internal/validation"
+	"github.com/kinqbert/finlo/server/internal/feature/auth"
+	"github.com/kinqbert/finlo/server/internal/feature/health"
+	"github.com/kinqbert/finlo/server/internal/http/apierror"
+	httpvalidator "github.com/kinqbert/finlo/server/internal/http/validator"
+	"github.com/kinqbert/finlo/server/internal/platform/config"
+	"github.com/kinqbert/finlo/server/internal/platform/database"
 	"github.com/labstack/echo/v5"
 	"github.com/labstack/echo/v5/middleware"
 	"gorm.io/gorm"
 )
 
 func setupHandlers(e *echo.Echo, db *gorm.DB, cfg *config.Config) error {
-	auth.Setup(e, db, &cfg.JWT)
+	auth.RegisterRoutes(e, db, &cfg.JWT)
 
-	if err := health.Setup(e, db); err != nil {
+	if err := health.RegisterRoutes(e, db); err != nil {
 		return fmt.Errorf("set up health handler: %w", err)
 	}
 
@@ -39,12 +39,15 @@ func main() {
 
 	e := echo.New()
 
-	e.Validator = validation.New()
+	e.Validator = httpvalidator.New()
 	e.HTTPErrorHandler = apierror.Handler
+
 	e.Use(middleware.RequestLogger())
 	e.Use(middleware.Recover())
 
-	setupHandlers(e, db, &cfg)
+	if err := setupHandlers(e, db, &cfg); err != nil {
+		log.Fatalf("set up handlers: %v", err)
+	}
 
 	e.GET("/", func(c *echo.Context) error {
 		return c.JSON(http.StatusOK, map[string]string{"message": "Hello, World!"})

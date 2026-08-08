@@ -6,8 +6,7 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
-	"github.com/kinqbert/finlo/server/internal/apierror"
-	"github.com/kinqbert/finlo/server/internal/utils"
+	"github.com/kinqbert/finlo/server/internal/http/apierror"
 )
 
 type Service struct {
@@ -40,7 +39,7 @@ func (s *Service) GetByID(ctx context.Context, id string) (User, error) {
 }
 
 func (s *Service) RegisterUser(ctx context.Context, input RegisterBodyDTO) (Tokens, error) {
-	email := strings.TrimSpace(strings.ToLower(input.Email))
+	email := normalizeEmail(input.Email)
 
 	hashedPassword, err := hashPassword(input.Password)
 	if err != nil {
@@ -68,7 +67,7 @@ func (s *Service) RegisterUser(ctx context.Context, input RegisterBodyDTO) (Toke
 }
 
 func (s *Service) LoginUser(ctx context.Context, input LoginBodyDTO) (Tokens, error) {
-	email := utils.NormalizeEmail(input.Email)
+	email := normalizeEmail(input.Email)
 
 	user, err := s.repository.FindByEmail(ctx, email)
 	switch {
