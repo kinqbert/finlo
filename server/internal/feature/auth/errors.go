@@ -7,8 +7,9 @@ import (
 )
 
 var (
-	ErrUserNotFound       = errors.New("user not found")
-	ErrEmailAlreadyExists = errors.New("email already exists")
+	ErrUserNotFound        = errors.New("user not found")
+	ErrEmailAlreadyExists  = errors.New("email already exists")
+	ErrGoogleAlreadyLinked = errors.New("email is linked to another Google account")
 )
 
 func invalidCredentialsError() error {

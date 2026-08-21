@@ -12,10 +12,37 @@ import (
 type Service struct {
 	repository   *Repository
 	tokenService *TokenService
+	google       GoogleTokenVerifier
 }
 
-func NewService(repository *Repository, tokenService *TokenService) *Service {
-	return &Service{repository: repository, tokenService: tokenService}
+func NewService(repository *Repository, tokenService *TokenService, google GoogleTokenVerifier) *Service {
+	return &Service{repository: repository, tokenService: tokenService, google: google}
+}
+
+func (s *Service) LoginWithGoogle(ctx context.Context, idToken string) (Tokens, error) {
+	identity, err := s.google.Verify(ctx, strings.TrimSpace(idToken))
+	if err != nil {
+		switch {
+		case errors.Is(err, ErrGoogleNotConfigured):
+			return Tokens{}, apierror.ServiceUnavailable("google_auth_not_configured", "Google authentication is not configured")
+		case errors.Is(err, ErrGoogleUnavailable):
+			return Tokens{}, apierror.ServiceUnavailable("google_auth_unavailable", "Google authentication is temporarily unavailable")
+		default:
+			return Tokens{}, apierror.Unauthorized("invalid_google_token", "Google ID token is invalid or expired")
+		}
+	}
+
+	user, err := s.repository.FindOrCreateGoogleUser(ctx, identity)
+	if err != nil {
+		switch {
+		case errors.Is(err, ErrGoogleAlreadyLinked), errors.Is(err, ErrEmailAlreadyExists):
+			return Tokens{}, apierror.Conflict("google_account_conflict", "this email is linked to another account")
+		default:
+			return Tokens{}, apierror.Internal(err)
+		}
+	}
+
+	return s.tokenService.Generate(user.ID)
 }
 
 func (s *Service) GetByID(ctx context.Context, id string) (User, error) {

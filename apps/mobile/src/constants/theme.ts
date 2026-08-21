@@ -7,20 +7,33 @@ import '@/global.css';
 
 import { Platform } from 'react-native';
 
+export const Palette = {
+  ink: '#17251F',
+  muted: '#728078',
+  line: '#E3E6DD',
+  paper: '#FFFFFF',
+  canvas: '#F4F4ED',
+  green: '#153F2E',
+  lime: '#C8EE75',
+  mint: '#DFF3DB',
+  peach: '#FBE5D7',
+  lilac: '#E9E3F8',
+} as const;
+
 export const Colors = {
   light: {
-    text: '#000000',
-    background: '#ffffff',
-    backgroundElement: '#F0F0F3',
-    backgroundSelected: '#E0E1E6',
-    textSecondary: '#60646C',
+    text: Palette.ink,
+    background: Palette.canvas,
+    backgroundElement: Palette.paper,
+    backgroundSelected: '#E8EFE6',
+    textSecondary: Palette.muted,
   },
   dark: {
-    text: '#ffffff',
-    background: '#000000',
-    backgroundElement: '#212225',
-    backgroundSelected: '#2E3135',
-    textSecondary: '#B0B4BA',
+    text: Palette.ink,
+    background: Palette.canvas,
+    backgroundElement: Palette.paper,
+    backgroundSelected: '#E8EFE6',
+    textSecondary: Palette.muted,
   },
 } as const;
 
@@ -61,5 +74,5 @@ export const Spacing = {
   six: 64,
 } as const;
 
-export const BottomTabInset = Platform.select({ ios: 50, android: 80 }) ?? 0;
+export const BottomTabInset = Platform.select({ ios: 54, android: 76 }) ?? 0;
 export const MaxContentWidth = 800;

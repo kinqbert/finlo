@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/kinqbert/finlo/server/internal/feature/auth"
+	"github.com/kinqbert/finlo/server/internal/feature/finance"
 	"github.com/kinqbert/finlo/server/internal/feature/health"
 	"github.com/kinqbert/finlo/server/internal/http/apierror"
 	httpvalidator "github.com/kinqbert/finlo/server/internal/http/validator"
@@ -17,7 +18,8 @@ import (
 )
 
 func setupHandlers(e *echo.Echo, db *gorm.DB, cfg *config.Config) error {
-	auth.RegisterRoutes(e, db, &cfg.JWT)
+	authMiddleware := auth.RegisterRoutes(e, db, &cfg.JWT, &cfg.Google)
+	finance.RegisterRoutes(e, db, authMiddleware)
 
 	if err := health.RegisterRoutes(e, db); err != nil {
 		return fmt.Errorf("set up health handler: %w", err)
@@ -44,13 +46,18 @@ func main() {
 
 	e.Use(middleware.RequestLogger())
 	e.Use(middleware.Recover())
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: cfg.CORS.AllowedOrigins,
+		AllowHeaders: []string{"Accept", "Authorization", "Content-Type"},
+		MaxAge:       3600,
+	}))
 
 	if err := setupHandlers(e, db, &cfg); err != nil {
 		log.Fatalf("set up handlers: %v", err)
 	}
 
 	e.GET("/", func(c *echo.Context) error {
-		return c.JSON(http.StatusOK, map[string]string{"message": "Hello, World!"})
+		return c.JSON(http.StatusOK, map[string]string{"name": "Finlo API", "status": "ok"})
 	})
 
 	if err := e.Start(":" + cfg.Port); err != nil {

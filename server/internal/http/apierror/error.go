@@ -63,6 +63,10 @@ func Conflict(code string, message string) error {
 	return New(http.StatusConflict, code, message)
 }
 
+func ServiceUnavailable(code string, message string) error {
+	return New(http.StatusServiceUnavailable, code, message)
+}
+
 func Internal(cause error) error {
 	return Wrap(
 		http.StatusInternalServerError,

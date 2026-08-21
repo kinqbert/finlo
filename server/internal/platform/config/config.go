@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/joho/godotenv"
 )
@@ -11,6 +12,8 @@ type Config struct {
 	Database DatabaseConfig
 	Port     string
 	JWT      JWTConfig
+	Google   GoogleConfig
+	CORS     CORSConfig
 }
 
 type DatabaseConfig struct {
@@ -27,6 +30,14 @@ type JWTConfig struct {
 	RefreshSecret string
 	Issuer        string
 	Audience      string
+}
+
+type GoogleConfig struct {
+	ClientIDs []string
+}
+
+type CORSConfig struct {
+	AllowedOrigins []string
 }
 
 func (d DatabaseConfig) GetDSN() string {
@@ -61,9 +72,25 @@ func Load() (Config, error) {
 			Issuer:        envOrDefault("JWT_ISSUER", "finlo-api"),
 			Audience:      envOrDefault("JWT_AUDIENCE", "finlo-app"),
 		},
+		Google: GoogleConfig{
+			ClientIDs: splitCSV(envOrDefault("GOOGLE_CLIENT_IDS", os.Getenv("GOOGLE_CLIENT_ID"))),
+		},
+		CORS: CORSConfig{
+			AllowedOrigins: splitCSV(envOrDefault("CORS_ALLOWED_ORIGINS", "http://localhost:5173")),
+		},
 	}
 
 	return cfg, nil
+}
+
+func splitCSV(value string) []string {
+	values := make([]string, 0)
+	for _, item := range strings.Split(value, ",") {
+		if item = strings.TrimSpace(item); item != "" {
+			values = append(values, item)
+		}
+	}
+	return values
 }
 
 func envOrDefault(key, fallback string) string {

@@ -23,8 +23,23 @@ func (h *Handler) RegisterRoutes(e *echo.Echo, authMiddleware *Middleware) {
 	auth.POST("/register", h.Register)
 	auth.POST("/login", h.Login)
 	auth.POST("/refresh", h.Refresh)
+	auth.POST("/google", h.Google)
 
 	auth.GET("/me", h.Me, authMiddleware.RequireAccessToken)
+}
+
+func (h *Handler) Google(c *echo.Context) error {
+	var input GoogleLoginBodyDTO
+	if err := request.BindAndValidateBody(c, &input); err != nil {
+		return err
+	}
+
+	tokens, err := h.service.LoginWithGoogle(c.Request().Context(), input.IDToken)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, tokens)
 }
 
 func (h *Handler) Register(c *echo.Context) error {
