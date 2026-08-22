@@ -60,7 +60,7 @@ func Load() (Config, error) {
 		Port: envOrDefault("PORT", "8080"),
 		Database: DatabaseConfig{
 			Host:     envOrDefault("DB_HOST", "localhost"),
-			Port:     envOrDefault("DB_PORT", "5432"),
+			Port:     envOrDefault("DB_PORT", "5433"),
 			User:     envOrDefault("DB_USER", "postgres"),
 			Password: envOrDefault("DB_PASSWORD", "postgres"),
 			Name:     envOrDefault("DB_NAME", "finlo"),

@@ -1,29 +1,51 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap');
+@import "tailwindcss";
 
-:root {
-  font-family: 'DM Sans', system-ui, sans-serif;
-  color: #17251f;
-  background: #f4f4ed;
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  --ink: #17251f;
-  --muted: #728078;
-  --line: #e5e7de;
-  --paper: #ffffff;
-  --canvas: #f4f4ed;
-  --green: #153f2e;
-  --green-2: #1e5a42;
-  --lime: #c8ee75;
-  --mint: #dff3db;
-  --peach: #fbe5d7;
-  --lilac: #e9e3f8;
-  --shadow: 0 18px 50px rgba(25, 49, 39, 0.08);
+@theme {
+  --font-sans: 'DM Sans', system-ui, sans-serif;
+  --font-heading: 'Manrope', sans-serif;
+  --color-ink: #17251f;
+  --color-muted: #728078;
+  --color-line: #e5e7de;
+  --color-canvas: #f4f4ed;
+  --color-brand: #153f2e;
+  --color-brand-dark: #1e5a42;
+  --color-lime: #c8ee75;
+  --color-mint: #dff3db;
+  --color-peach: #fbe5d7;
+  --color-lilac: #e9e3f8;
+  --shadow-card: 0 18px 50px rgba(25, 49, 39, 0.08);
 }
 
-* { box-sizing: border-box; }
-body { margin: 0; min-width: 320px; min-height: 100vh; }
-button, input, select { font: inherit; }
-button { color: inherit; }
-button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid rgba(62, 126, 92, .2); outline-offset: 2px; }
-#root { min-height: 100vh; }
+@keyframes refresh-slide {
+  0% { transform: translateX(-110%); }
+  50%, 100% { transform: translateX(225%); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+}
+
+@keyframes pop-in {
+  from { opacity: 0; transform: translate(-50%, -48%) scale(.98); }
+}
+
+@layer base {
+  :root {
+    font-family: var(--font-sans);
+    color: var(--color-ink);
+    background: var(--color-canvas);
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body { min-width: 320px; min-height: 100vh; }
+  button, input, select { font: inherit; }
+  button { color: inherit; }
+  button:focus-visible, input:focus-visible, select:focus-visible {
+    outline: 3px solid rgba(62, 126, 92, .2);
+    outline-offset: 2px;
+  }
+  #root { min-height: 100vh; }
+}

@@ -111,7 +111,11 @@ func (s *Service) DeleteAccount(ctx context.Context, userID, id string) error {
 
 func (s *Service) ListTransactions(ctx context.Context, userID string) ([]Transaction, error) {
 	transactions := make([]Transaction, 0)
-	if err := s.db.WithContext(ctx).Where("user_id = ?", userID).Order("occurred_at DESC").Limit(100).Find(&transactions).Error; err != nil {
+	if err := withTransactionCategory(s.db.WithContext(ctx)).
+		Where("transactions.user_id = ?", userID).
+		Order("transactions.occurred_at DESC").
+		Limit(100).
+		Find(&transactions).Error; err != nil {
 		return nil, apierror.Internal(fmt.Errorf("list transactions: %w", err))
 	}
 	return transactions, nil
@@ -128,6 +132,10 @@ func (s *Service) CreateTransaction(ctx context.Context, userID string, input Cr
 		if err != nil {
 			return fmt.Errorf("find transaction account: %w", err)
 		}
+		category, err := findOrCreateCategory(tx, userID, input.Type, input.Category)
+		if err != nil {
+			return fmt.Errorf("resolve transaction category: %w", err)
+		}
 
 		transaction = Transaction{
 			ID:          uuid.NewString(),
@@ -136,7 +144,8 @@ func (s *Service) CreateTransaction(ctx context.Context, userID string, input Cr
 			Type:        input.Type,
 			AmountMinor: input.AmountMinor,
 			Currency:    account.Currency,
-			Category:    strings.TrimSpace(input.Category),
+			CategoryID:  category.ID,
+			Category:    category.Name,
 			Description: strings.TrimSpace(input.Description),
 			OccurredAt:  input.OccurredAt.UTC(),
 			Source:      "manual",
@@ -205,17 +214,17 @@ func (s *Service) DeleteTransaction(ctx context.Context, userID, id string) erro
 }
 
 func (s *Service) ListBudgets(ctx context.Context, userID, month string) ([]BudgetDTO, error) {
-	query := s.db.WithContext(ctx).Where("user_id = ?", userID)
+	query := withBudgetCategory(s.db.WithContext(ctx)).Where("budgets.user_id = ?", userID)
 	if month != "" {
 		parsedMonth, err := parseMonth(month)
 		if err != nil {
 			return nil, err
 		}
-		query = query.Where("month = ?", parsedMonth)
+		query = query.Where("budgets.month = ?", parsedMonth)
 	}
 
 	var budgets []Budget
-	if err := query.Order("month DESC, category ASC").Find(&budgets).Error; err != nil {
+	if err := query.Order("budgets.month DESC, categories.name ASC").Find(&budgets).Error; err != nil {
 		return nil, apierror.Internal(fmt.Errorf("list budgets: %w", err))
 	}
 	result := make([]BudgetDTO, 0, len(budgets))
@@ -231,33 +240,45 @@ func (s *Service) SaveBudget(ctx context.Context, userID string, input CreateBud
 		return BudgetDTO{}, err
 	}
 	currency := normalizeCurrency(input.Currency)
-	category := strings.TrimSpace(input.Category)
 
 	var budget Budget
-	err = s.db.WithContext(ctx).Where(
-		"user_id = ? AND category = ? AND currency = ? AND month = ?",
-		userID, category, currency, month,
-	).First(&budget).Error
-	switch {
-	case err == nil:
-		budget.AmountMinor = input.AmountMinor
-		if err := s.db.WithContext(ctx).Save(&budget).Error; err != nil {
-			return BudgetDTO{}, apierror.Internal(fmt.Errorf("update budget: %w", err))
+	err = s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		category, err := findOrCreateCategory(tx, userID, "expense", input.Category)
+		if err != nil {
+			return fmt.Errorf("resolve budget category: %w", err)
 		}
-	case errors.Is(err, gorm.ErrRecordNotFound):
-		budget = Budget{
-			ID:          uuid.NewString(),
-			UserID:      userID,
-			Category:    category,
-			AmountMinor: input.AmountMinor,
-			Currency:    currency,
-			Month:       month,
+
+		err = tx.Where(
+			"user_id = ? AND category_id = ? AND currency = ? AND month = ?",
+			userID, category.ID, currency, month,
+		).First(&budget).Error
+		switch {
+		case err == nil:
+			budget.AmountMinor = input.AmountMinor
+			budget.Category = category.Name
+			if err := tx.Save(&budget).Error; err != nil {
+				return fmt.Errorf("update budget: %w", err)
+			}
+		case errors.Is(err, gorm.ErrRecordNotFound):
+			budget = Budget{
+				ID:          uuid.NewString(),
+				UserID:      userID,
+				CategoryID:  category.ID,
+				Category:    category.Name,
+				AmountMinor: input.AmountMinor,
+				Currency:    currency,
+				Month:       month,
+			}
+			if err := tx.Create(&budget).Error; err != nil {
+				return fmt.Errorf("create budget: %w", err)
+			}
+		default:
+			return fmt.Errorf("find budget: %w", err)
 		}
-		if err := s.db.WithContext(ctx).Create(&budget).Error; err != nil {
-			return BudgetDTO{}, apierror.Internal(fmt.Errorf("create budget: %w", err))
-		}
-	default:
-		return BudgetDTO{}, apierror.Internal(fmt.Errorf("find budget: %w", err))
+		return nil
+	})
+	if err != nil {
+		return BudgetDTO{}, apierror.Internal(err)
 	}
 	return mapBudget(budget), nil
 }
@@ -433,33 +454,37 @@ func (s *Service) Dashboard(ctx context.Context, userID string) (Dashboard, erro
 		Where("user_id = ?", userID).Group("currency").Scan(&dashboard.Balances).Error; err != nil {
 		return Dashboard{}, apierror.Internal(fmt.Errorf("summarize balances: %w", err))
 	}
-	if err := s.db.WithContext(ctx).Where("user_id = ?", userID).Order("occurred_at DESC").Limit(10).
+	if err := withTransactionCategory(s.db.WithContext(ctx)).
+		Where("transactions.user_id = ?", userID).
+		Order("transactions.occurred_at DESC").Limit(10).
 		Find(&dashboard.RecentTransactions).Error; err != nil {
 		return Dashboard{}, apierror.Internal(fmt.Errorf("load recent transactions: %w", err))
 	}
 
 	var budgets []Budget
-	if err := s.db.WithContext(ctx).Where("user_id = ? AND month = ?", userID, monthStart).Order("category ASC").Find(&budgets).Error; err != nil {
+	if err := withBudgetCategory(s.db.WithContext(ctx)).
+		Where("budgets.user_id = ? AND budgets.month = ?", userID, monthStart).
+		Order("categories.name ASC").Find(&budgets).Error; err != nil {
 		return Dashboard{}, apierror.Internal(fmt.Errorf("load dashboard budgets: %w", err))
 	}
 	type spendingRow struct {
-		Category string
-		Currency string
-		Amount   int64
+		CategoryID string
+		Currency   string
+		Amount     int64
 	}
 	var spending []spendingRow
 	if err := s.db.WithContext(ctx).Model(&Transaction{}).
-		Select("category, currency, COALESCE(SUM(amount_minor), 0) AS amount").
+		Select("category_id, currency, COALESCE(SUM(amount_minor), 0) AS amount").
 		Where("user_id = ? AND type = ? AND occurred_at >= ? AND occurred_at < ?", userID, "expense", monthStart, monthEnd).
-		Group("category, currency").Scan(&spending).Error; err != nil {
+		Group("category_id, currency").Scan(&spending).Error; err != nil {
 		return Dashboard{}, apierror.Internal(fmt.Errorf("summarize spending: %w", err))
 	}
 	spentByBudget := make(map[string]int64, len(spending))
 	for _, row := range spending {
-		spentByBudget[row.Category+"\x00"+row.Currency] = row.Amount
+		spentByBudget[row.CategoryID+"\x00"+row.Currency] = row.Amount
 	}
 	for _, budget := range budgets {
-		spent := spentByBudget[budget.Category+"\x00"+budget.Currency]
+		spent := spentByBudget[budget.CategoryID+"\x00"+budget.Currency]
 		progress := BudgetProgress{
 			BudgetDTO:      mapBudget(budget),
 			SpentMinor:     spent,
@@ -523,6 +548,41 @@ func (s *Service) ensureAccount(ctx context.Context, userID string, accountID *s
 	}
 	_, err := s.findAccount(ctx, userID, *accountID)
 	return err
+}
+
+func findOrCreateCategory(db *gorm.DB, userID, categoryType, name string) (Category, error) {
+	category := Category{
+		ID:     uuid.NewString(),
+		UserID: userID,
+		Name:   strings.TrimSpace(name),
+		Type:   categoryType,
+	}
+	if err := db.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "user_id"}, {Name: "type"}, {Name: "name"}},
+		DoNothing: true,
+	}).Create(&category).Error; err != nil {
+		return Category{}, err
+	}
+	var persisted Category
+	if err := db.Where(
+		"user_id = ? AND type = ? AND name = ?",
+		userID, categoryType, category.Name,
+	).First(&persisted).Error; err != nil {
+		return Category{}, err
+	}
+	return persisted, nil
+}
+
+func withTransactionCategory(db *gorm.DB) *gorm.DB {
+	return db.Model(&Transaction{}).
+		Select("transactions.*, categories.name AS category").
+		Joins("JOIN categories ON categories.id = transactions.category_id")
+}
+
+func withBudgetCategory(db *gorm.DB) *gorm.DB {
+	return db.Model(&Budget{}).
+		Select("budgets.*, categories.name AS category").
+		Joins("JOIN categories ON categories.id = budgets.category_id")
 }
 
 func validateID(id string) error {

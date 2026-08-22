@@ -1,6 +1,8 @@
 package finance
 
 import (
+	"encoding/json"
+	"strings"
 	"testing"
 	"time"
 )
@@ -34,5 +36,32 @@ func TestParseOptionalDate(t *testing.T) {
 	}
 	if date.Format("2006-01-02") != value {
 		t.Fatalf("parseOptionalDate() = %v", date)
+	}
+}
+
+func TestTransactionCategoryJSONContract(t *testing.T) {
+	transaction := Transaction{
+		CategoryID: "category-id",
+		Category:   "Salary",
+	}
+
+	payload, err := json.Marshal(transaction)
+	if err != nil {
+		t.Fatalf("json.Marshal() error = %v", err)
+	}
+	if !strings.Contains(string(payload), `"category":"Salary"`) {
+		t.Fatalf("transaction JSON does not include category name: %s", payload)
+	}
+	if strings.Contains(string(payload), "category_id") {
+		t.Fatalf("transaction JSON exposes internal category ID: %s", payload)
+	}
+}
+
+func TestMapBudgetKeepsCategoryName(t *testing.T) {
+	budget := Budget{CategoryID: "category-id", Category: "Groceries"}
+
+	result := mapBudget(budget)
+	if result.Category != "Groceries" {
+		t.Fatalf("mapBudget().Category = %q, want Groceries", result.Category)
 	}
 }

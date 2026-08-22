@@ -6,6 +6,15 @@ import (
 	"gorm.io/gorm"
 )
 
+type Category struct {
+	ID        string    `json:"id" gorm:"primaryKey"`
+	UserID    string    `json:"-" gorm:"index;not null"`
+	Name      string    `json:"name" gorm:"not null"`
+	Type      string    `json:"type" gorm:"not null"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
 type Account struct {
 	ID           string         `json:"id" gorm:"primaryKey"`
 	UserID       string         `json:"-" gorm:"index;not null"`
@@ -25,7 +34,8 @@ type Transaction struct {
 	Type        string         `json:"type" gorm:"not null"`
 	AmountMinor int64          `json:"amount_minor" gorm:"not null"`
 	Currency    string         `json:"currency" gorm:"size:3;not null"`
-	Category    string         `json:"category" gorm:"not null"`
+	CategoryID  string         `json:"-" gorm:"index;not null"`
+	Category    string         `json:"category" gorm:"->;-:migration"`
 	Description string         `json:"description"`
 	OccurredAt  time.Time      `json:"occurred_at" gorm:"index;not null"`
 	Source      string         `json:"source" gorm:"not null"`
@@ -38,7 +48,8 @@ type Transaction struct {
 type Budget struct {
 	ID          string    `json:"id" gorm:"primaryKey"`
 	UserID      string    `json:"-" gorm:"index;not null"`
-	Category    string    `json:"category" gorm:"not null"`
+	CategoryID  string    `json:"-" gorm:"index;not null"`
+	Category    string    `json:"category" gorm:"->;-:migration"`
 	AmountMinor int64     `json:"amount_minor" gorm:"not null"`
 	Currency    string    `json:"currency" gorm:"size:3;not null"`
 	Month       time.Time `json:"-" gorm:"type:date;not null"`
