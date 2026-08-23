@@ -25,7 +25,7 @@ The API runs on `http://localhost:8080` by default. All `/api/*` routes require 
 
 ### Initial API
 
-- `POST /auth/register`, `POST /auth/login`, `POST /auth/refresh`, `GET /auth/me`
+- `POST /auth/register`, `POST /auth/login`, `POST /auth/refresh`, `POST /auth/logout`, `GET /auth/me`
 - `POST /auth/google` — verifies a Google ID token and returns Finlo access and refresh tokens
 - `/api/accounts` — list, create, update, and delete accounts
 - `/api/transactions` — list, create, and delete income/expense transactions
@@ -38,11 +38,13 @@ Money is represented as integer minor units (`amount_minor`, `balance_minor`) pl
 
 Set `GOOGLE_CLIENT_IDS` to the comma-separated web, iOS, and Android OAuth client IDs accepted by the backend (`GOOGLE_CLIENT_ID` remains a single-ID fallback). Web and mobile clients obtain a Google ID token and exchange it at `POST /auth/google`; Finlo never accepts an unverified Google profile from a client.
 
+The web client keeps its short-lived access token in memory and asks the API to store the refresh token in an HttpOnly cookie. Native clients continue to receive and submit refresh tokens in JSON so they can use secure device storage. In production, set `AUTH_COOKIE_SECURE=true`; use `AUTH_COOKIE_SAME_SITE=none` only when the web app and API are genuinely cross-site, and then keep the API CORS allowlist explicit.
+
 Monobank import and model-generated AI insights are planned behind the existing transaction `source`/`external_id` fields and dashboard insight response. The initial dashboard uses deterministic insights until an AI provider is configured.
 
 ## Frontend quick start
 
-The web app uses Radix UI primitives and talks to the API through Vite's `localhost:8080` development proxy:
+The web app uses Radix UI primitives and talks to the API through Vite's `localhost:8080` development proxy. Both React clients use Axios for transport, TanStack Query for server state, Zustand for global client-only state, and React Hook Form with Zod for forms:
 
 ```bash
 cd apps/web
@@ -51,6 +53,8 @@ npm run dev
 ```
 
 Copy `apps/web/.env.example` to `.env` when using a deployed API or Google sign-in. Without an authenticated API, choose **Explore with demo data** to preview and interact with the complete interface.
+
+The API contract lives in `server/openapi.yaml`. After changing a route or DTO, regenerate the checked-in web types with `npm run api:types` from `apps/web/`. Forms use React Hook Form and Zod for typed client validation. Optional production error reporting is enabled by setting `VITE_SENTRY_DSN` (and, when available, `VITE_APP_VERSION`).
 
 The Expo app uses secure device storage for Finlo tokens and includes a dashboard, accounts/activity view, and quick transaction entry. The committed native identifiers are `com.kinqbert.finlo` for both platforms.
 
