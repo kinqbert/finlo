@@ -1,8 +1,9 @@
 import type { User } from '@/types'
+import { baseCurrencyCode } from '@/constants/currencies'
 
 const moneyFormatters = new Map<string, Intl.NumberFormat>()
 
-export function formatMoney(minor: number, currency = 'UAH', compact = false) {
+export function formatMoney(minor: number, currency: string = baseCurrencyCode, compact = false) {
   const key = `${currency}:${compact}`
   let formatter = moneyFormatters.get(key)
   if (!formatter) {
@@ -15,6 +16,16 @@ export function formatMoney(minor: number, currency = 'UAH', compact = false) {
     moneyFormatters.set(key, formatter)
   }
   return formatter.format(minor / 100)
+}
+
+export function formatMoneyAmount(minor: number, currency: string = baseCurrencyCode, compact = false) {
+  const key = `${currency}:${compact}`
+  let formatter = moneyFormatters.get(key)
+  if (!formatter) {
+    formatMoney(minor, currency, compact)
+    formatter = moneyFormatters.get(key)!
+  }
+  return formatter.formatToParts(minor / 100).filter((part) => part.type !== 'currency').map((part) => part.value).join('').trim()
 }
 
 export function initials(user: User) {

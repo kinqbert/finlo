@@ -11,6 +11,8 @@ import { InlineError } from '@/components/ui/Feedback'
 import { FormField } from '@/components/ui/FinanceDialog'
 import { MotionItem } from '@/components/ui/MotionItem'
 import { PageHeader } from '@/components/ui/PageHeader'
+import { MonobankConnectDialog } from '@/components/integrations/MonobankConnectDialog'
+import { MCCRulesCard } from '@/components/settings/MCCRulesCard'
 import { useFinanceMutation } from '@/hooks/useFinanceMutation'
 import { useReorderCategories } from '@/hooks/useReorderCategories'
 import { errorMessage } from '@/lib/format'
@@ -41,6 +43,12 @@ export function SettingsPage(props: FinanceActions) {
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
   const [busy, setBusy] = useState<string | null>(null)
   const [error, setError] = useState('')
+  const monobankConnection = props.data.monobankConnection
+  const monobankStatus = monobankConnection?.status === 'active'
+    ? `${monobankConnection.account_count} accounts and ${monobankConnection.jar_count} jars connected`
+    : monobankConnection?.status === 'disconnected'
+      ? 'Webhook disconnected · imported data retained'
+      : monobankConnection?.last_error || (monobankConnection ? 'Setup is incomplete' : '')
 
   const categoriesFor = (type: Category['type']) => props.data.categories.filter((item) => item.type === type).sort((a, b) => a.sort_order - b.sort_order)
 
@@ -126,6 +134,9 @@ export function SettingsPage(props: FinanceActions) {
   return <>
     <PageHeader eyebrow="Preferences" title="Settings" subtitle="Keep your financial categories organized your way." />
     <Card className="mb-2.5">
+      <div className="flex items-center justify-between gap-4 max-[540px]:items-start max-[540px]:flex-col"><div><h2 className="m-0 font-heading text-base font-bold">Monobank</h2><p className="mt-0.5 mb-0 text-[10px] text-muted">Connect selected accounts and turn jars into Finlo goals.</p>{monobankStatus && <p className="mt-2 mb-0 text-[9px] font-bold text-[#53725f]">{monobankStatus}</p>}</div><MonobankConnectDialog {...props} /></div>
+    </Card>
+    <Card className="mb-2.5">
       <div className="mb-4"><h2 className="m-0 font-heading text-base font-bold">Add a category</h2><p className="mt-0.5 mb-0 text-[10px] text-muted">Income and expense categories are managed separately.</p></div>
       <form className="grid grid-cols-[1fr_160px_auto] items-end gap-2.5 max-[700px]:grid-cols-1" onSubmit={addForm.handleSubmit(add)}>
         <FormField label="Name" error={addForm.formState.errors.name?.message}><input placeholder="e.g. Education" disabled={busy === 'new'} {...addForm.register('name')} /></FormField>
@@ -135,5 +146,6 @@ export function SettingsPage(props: FinanceActions) {
       {error && <div className="mt-3"><InlineError message={error} /></div>}
     </Card>
     <section className="grid grid-cols-2 gap-2.5 max-[900px]:grid-cols-1">{categorySection('expense', 'Expense categories', 'Used for spending and category budgets.')}{categorySection('income', 'Income categories', 'Used to organize salary and other money coming in.')}</section>
+    <MCCRulesCard {...props} />
   </>
 }

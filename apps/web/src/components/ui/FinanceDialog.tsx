@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
 import { X } from 'lucide-react'
+import { baseCurrencyCode, getCurrency } from '@/constants/currencies'
 
 export function FinanceDialog({ busy, eyebrow, title, description, children }: { busy: boolean; eyebrow: string; title: string; description: string; children: ReactNode }) {
   return (
@@ -25,6 +26,7 @@ export function FormField({ label, error, children }: { label: string; error?: s
   return <label className="grid flex-1 gap-1.25 [&_input]:h-9.5 [&_input]:w-full [&_input]:min-w-0 [&_input]:rounded-[9px] [&_input]:border [&_input]:border-[#dfe3db] [&_input]:bg-[#fbfcf8] [&_input]:px-3 [&_input]:text-xs [&_select]:h-9.5 [&_select]:w-full [&_select]:min-w-0 [&_select]:rounded-[9px] [&_select]:border [&_select]:border-[#dfe3db] [&_select]:bg-[#fbfcf8] [&_select]:px-3 [&_select]:text-xs"><span className="text-[9px] font-bold text-[#5d6a63]">{label}</span>{children}{error && <span className="text-[9px] leading-3 text-[#984b37]" role="alert">{error}</span>}</label>
 }
 
-export function MoneyInput({ children }: { children: ReactNode }) {
-  return <div className="relative [&_b]:absolute [&_b]:top-1/2 [&_b]:left-3 [&_b]:z-1 [&_b]:-translate-y-1/2 [&_b]:text-brand [&_input]:pl-8 [&_input]:text-[17px] [&_input]:font-bold"><b>₴</b>{children}</div>
+export function MoneyInput({ children, currency = baseCurrencyCode }: { children: ReactNode; currency?: string }) {
+  const symbol = getCurrency(currency)?.symbol ?? currency
+  return <div className="relative [&_b]:absolute [&_b]:top-1/2 [&_b]:left-3 [&_b]:z-1 [&_b]:-translate-y-1/2 [&_b]:text-brand [&_input]:pl-8 [&_input]:text-[17px] [&_input]:font-bold"><b>{symbol}</b>{children}</div>
 }

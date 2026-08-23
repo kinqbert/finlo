@@ -7,13 +7,14 @@ import { Card, CardTitle } from '@/components/ui/Card'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { MotionItem } from '@/components/ui/MotionItem'
 import { PageHeader } from '@/components/ui/PageHeader'
+import { baseCurrencyCode } from '@/constants/currencies'
 import { formatShortDate, subscriptionNextBillingDate } from '@/lib/date'
 import type { FinanceActions } from '@/types'
 
 export function PlanningPage(props: FinanceActions) {
   const { data } = props
   const activeSubscriptions = data.subscriptions.filter((subscription) => subscription.active)
-  const subscriptionCurrency = activeSubscriptions[0]?.currency ?? 'UAH'
+  const subscriptionCurrency = activeSubscriptions[0]?.currency ?? baseCurrencyCode
   const monthlySubscriptions = activeSubscriptions.filter((subscription) => subscription.currency === subscriptionCurrency).reduce((sum, subscription) => sum + subscription.amount_minor, 0)
   const today = new Date()
   const nextRenewal = activeSubscriptions.map((subscription) => subscriptionNextBillingDate(subscription, today)).sort((left, right) => left.getTime() - right.getTime())[0]

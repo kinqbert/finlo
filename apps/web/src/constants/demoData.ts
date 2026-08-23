@@ -2,6 +2,7 @@ import type { FinanceData, User } from '@/types'
 
 const now = new Date()
 const timestamps = { created_at: now.toISOString(), updated_at: now.toISOString() }
+const transactionMetadata = { category_needs_review: false, pending: false }
 const isoDate = (daysAgo: number) => {
   const date = new Date(now)
   date.setDate(date.getDate() - daysAgo)
@@ -32,12 +33,12 @@ export const demoData: FinanceData = {
     { id: 'a3', name: 'Emergency savings', type: 'savings', currency: 'UAH', balance_minor: 7240000, ...timestamps },
   ],
   transactions: [
-    { id: 't1', account_id: 'a1', type: 'expense', amount_minor: 128500, currency: 'UAH', category: 'Groceries', description: 'Silpo', occurred_at: isoDate(0), source: 'monobank', ...timestamps },
-    { id: 't2', account_id: 'a1', type: 'expense', amount_minor: 39000, currency: 'UAH', category: 'Transport', description: 'Bolt', occurred_at: isoDate(1), source: 'monobank', ...timestamps },
-    { id: 't3', account_id: 'a1', type: 'expense', amount_minor: 64900, currency: 'UAH', category: 'Subscriptions', description: 'Spotify', occurred_at: isoDate(2), source: 'monobank', ...timestamps },
-    { id: 't4', account_id: 'a1', type: 'income', amount_minor: 6800000, currency: 'UAH', category: 'Salary', description: 'Monthly salary', occurred_at: isoDate(5), source: 'manual', ...timestamps },
-    { id: 't5', account_id: 'a1', type: 'expense', amount_minor: 215000, currency: 'UAH', category: 'Dining', description: 'Lunch with friends', occurred_at: isoDate(6), source: 'manual', ...timestamps },
-    { id: 't6', account_id: 'a2', type: 'expense', amount_minor: 78000, currency: 'UAH', category: 'Health', description: 'Pharmacy', occurred_at: isoDate(8), source: 'manual', ...timestamps },
+    { id: 't1', account_id: 'a1', type: 'expense', amount_minor: 128500, currency: 'UAH', category: 'Groceries', description: 'Silpo', occurred_at: isoDate(0), source: 'monobank', ...transactionMetadata, ...timestamps },
+    { id: 't2', account_id: 'a1', type: 'expense', amount_minor: 39000, currency: 'UAH', category: 'Transport', description: 'Bolt', occurred_at: isoDate(1), source: 'monobank', ...transactionMetadata, ...timestamps },
+    { id: 't3', account_id: 'a1', type: 'expense', amount_minor: 64900, currency: 'UAH', category: 'Subscriptions', description: 'Spotify', occurred_at: isoDate(2), source: 'monobank', ...transactionMetadata, ...timestamps },
+    { id: 't4', account_id: 'a1', type: 'income', amount_minor: 6800000, currency: 'UAH', category: 'Salary', description: 'Monthly salary', occurred_at: isoDate(5), source: 'manual', ...transactionMetadata, ...timestamps },
+    { id: 't5', account_id: 'a1', type: 'expense', amount_minor: 215000, currency: 'UAH', category: 'Dining', description: 'Lunch with friends', occurred_at: isoDate(6), source: 'manual', ...transactionMetadata, ...timestamps },
+    { id: 't6', account_id: 'a2', type: 'expense', amount_minor: 78000, currency: 'UAH', category: 'Health', description: 'Pharmacy', occurred_at: isoDate(8), source: 'manual', ...transactionMetadata, ...timestamps },
   ],
   budgets: [
     { id: 'b1', category: 'Groceries', amount_minor: 1000000, spent_minor: 642000, remaining_minor: 358000, currency: 'UAH', month: now.toISOString().slice(0, 7), ...timestamps },
@@ -49,8 +50,20 @@ export const demoData: FinanceData = {
     { id: 's2', account_id: 'a1', name: 'iCloud+', amount_minor: 39900, currency: 'UAH', billing_day: 28, active: true, ...timestamps },
     { id: 's3', account_id: 'a1', name: 'YouTube Premium', amount_minor: 149000, currency: 'UAH', billing_day: 4, active: true, ...timestamps },
   ],
+	goals: [],
+	mccRules: [],
+	monobankConnection: null,
   dashboard: {
     balances: [{ currency: 'UAH', balance_minor: 12942500 }],
+	total_balance: { currency: 'UAH', balance_minor: 12942500 },
+	total_balances: [
+	  { currency: 'UAH', balance_minor: 12942500 },
+	  { currency: 'USD', balance_minor: 291301 },
+	  { currency: 'EUR', balance_minor: 249374 },
+	],
+	balance_complete: true,
+	unconverted_currencies: [],
+	exchange_rates_as_of: now.toISOString(),
     recent_transactions: [],
     budgets: [],
     emergency_fund: { target_minor: 12000000, current_minor: 7240000, currency: 'UAH', ...timestamps },

@@ -7,6 +7,7 @@ import { saveBudget } from '@/api'
 import { Button } from '@/components/ui/Button'
 import { DialogForm, FinanceDialog, FormField, MoneyInput } from '@/components/ui/FinanceDialog'
 import { InlineError, SubmitButton } from '@/components/ui/Feedback'
+import { baseCurrencyCode } from '@/constants/currencies'
 import { useFinanceMutation } from '@/hooks/useFinanceMutation'
 import { errorMessage } from '@/lib/format'
 import { budgetSchema, type BudgetFormValues } from '@/lib/validation'
@@ -21,7 +22,7 @@ export function BudgetDialog(props: FinanceActions) {
   const expenseCategories = props.data.categories.filter((category) => category.type === 'expense').sort((a, b) => a.sort_order - b.sort_order)
 
   async function submit(values: BudgetFormValues) {
-    const input = { category: values.category, amount_minor: Math.round(values.amount * 100), currency: 'UAH', month: new Date().toISOString().slice(0, 7) }
+    const input = { category: values.category, amount_minor: Math.round(values.amount * 100), currency: baseCurrencyCode, month: new Date().toISOString().slice(0, 7) }
     setError('')
     try {
       if (props.isDemo) {

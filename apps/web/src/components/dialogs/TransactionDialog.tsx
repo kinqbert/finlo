@@ -37,7 +37,7 @@ export function TransactionDialog(props: FinanceActions & { disabled?: boolean }
     try {
       if (props.isDemo) {
         const timestamp = new Date().toISOString()
-        const transaction: Transaction = { id: crypto.randomUUID(), account_id: account.id, type, amount_minor: amountMinor, currency: account.currency, category: values.category, description: values.description, occurred_at: timestamp, source: 'manual', created_at: timestamp, updated_at: timestamp }
+        const transaction: Transaction = { id: crypto.randomUUID(), account_id: account.id, type, amount_minor: amountMinor, currency: account.currency, category: values.category, category_needs_review: false, pending: false, description: values.description, occurred_at: timestamp, source: 'manual', created_at: timestamp, updated_at: timestamp }
         const next = structuredClone(props.data)
         next.transactions.unshift(transaction)
         next.dashboard.recent_transactions.unshift(transaction)

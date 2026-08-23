@@ -1,3 +1,5 @@
+import type { SupportedCurrencyCode } from '@/constants/currencies';
+
 export type Tokens = { access_token: string; refresh_token: string };
 
 export type User = {
@@ -12,7 +14,7 @@ export type Account = {
   id: string;
   name: string;
   type: 'cash' | 'bank' | 'card' | 'savings' | 'other';
-  currency: string;
+  currency: SupportedCurrencyCode;
   balance_minor: number;
 };
 
@@ -21,7 +23,7 @@ export type Transaction = {
   account_id: string;
   type: 'income' | 'expense';
   amount_minor: number;
-  currency: string;
+  currency: SupportedCurrencyCode;
   category: string;
   description: string;
   occurred_at: string;
@@ -32,7 +34,7 @@ export type Budget = {
   id: string;
   category: string;
   amount_minor: number;
-  currency: string;
+  currency: SupportedCurrencyCode;
   month: string;
   spent_minor?: number;
   remaining_minor?: number;
@@ -41,20 +43,20 @@ export type Budget = {
 export type EmergencyFund = {
   target_minor: number;
   current_minor: number;
-  currency: string;
+  currency: SupportedCurrencyCode;
 };
 
 export type Subscription = {
   id: string;
   name: string;
   amount_minor: number;
-  currency: string;
+  currency: SupportedCurrencyCode;
   billing_day: number;
   active: boolean;
 };
 
 export type Dashboard = {
-  balances: { currency: string; balance_minor: number }[];
+  balances: { currency: SupportedCurrencyCode; balance_minor: number }[];
   recent_transactions: Transaction[];
   budgets: Budget[];
   emergency_fund: EmergencyFund | null;

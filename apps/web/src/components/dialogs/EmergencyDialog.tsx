@@ -7,6 +7,7 @@ import { saveEmergencyFund } from '@/api'
 import { Button } from '@/components/ui/Button'
 import { DialogForm, FinanceDialog, FormField, MoneyInput } from '@/components/ui/FinanceDialog'
 import { InlineError, SubmitButton } from '@/components/ui/Feedback'
+import { baseCurrencyCode } from '@/constants/currencies'
 import { useFinanceMutation } from '@/hooks/useFinanceMutation'
 import { errorMessage } from '@/lib/format'
 import { emergencyFundSchema, type EmergencyFundFormValues } from '@/lib/validation'
@@ -25,7 +26,7 @@ export function EmergencyDialog(props: FinanceActions) {
   }, [form, fund, open])
 
   async function submit(values: EmergencyFundFormValues) {
-    const input = { target_minor: Math.round(values.target * 100), current_minor: Math.round(values.current * 100), currency: 'UAH' }
+    const input = { target_minor: Math.round(values.target * 100), current_minor: Math.round(values.current * 100), currency: baseCurrencyCode }
     setError('')
     try {
       if (props.isDemo) { const next = structuredClone(props.data); const timestamp = new Date().toISOString(); next.dashboard.emergency_fund = { ...input, created_at: fund?.created_at ?? timestamp, updated_at: timestamp }; props.onDemoChange(next) }

@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/Button'
 import { DayOfMonthPicker } from '@/components/ui/DayOfMonthPicker'
 import { DialogForm, FinanceDialog, FormField, MoneyInput } from '@/components/ui/FinanceDialog'
 import { InlineError, SubmitButton } from '@/components/ui/Feedback'
+import { baseCurrencyCode } from '@/constants/currencies'
 import { useFinanceMutation } from '@/hooks/useFinanceMutation'
 import { errorMessage } from '@/lib/format'
 import { subscriptionSchema, type SubscriptionFormValues } from '@/lib/validation'
@@ -21,7 +22,7 @@ export function SubscriptionDialog({ triggerVariant = 'primary', ...props }: Fin
   const busy = form.formState.isSubmitting
 
   async function submit(values: SubscriptionFormValues) {
-    const input = { name: values.name, amount_minor: Math.round(values.amount * 100), currency: 'UAH', billing_day: values.billing_day, active: true }
+    const input = { name: values.name, amount_minor: Math.round(values.amount * 100), currency: baseCurrencyCode, billing_day: values.billing_day, active: true }
     setError('')
     try {
       if (props.isDemo) { const next = structuredClone(props.data); const timestamp = new Date().toISOString(); const subscription = { ...input, id: crypto.randomUUID(), created_at: timestamp, updated_at: timestamp }; next.subscriptions.push(subscription); next.dashboard.subscriptions.push(subscription); props.onDemoChange(next) }

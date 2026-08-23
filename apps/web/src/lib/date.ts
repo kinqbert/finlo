@@ -2,6 +2,15 @@ import type { Subscription } from '@/types'
 
 const shortDateFormatter = new Intl.DateTimeFormat('en', { month: 'short', day: 'numeric' })
 
+export function greetingForTime(date = new Date()) {
+  const hour = date.getHours()
+  if (hour < 5) return 'Good night'
+  if (hour < 12) return 'Good morning'
+  if (hour < 17) return 'Good afternoon'
+  if (hour < 21) return 'Good evening'
+  return 'Good night'
+}
+
 export function nextBillingDate(billingDay: number, from = new Date()) {
   const today = new Date(from.getFullYear(), from.getMonth(), from.getDate())
   let result = billingDate(from.getFullYear(), from.getMonth(), billingDay)

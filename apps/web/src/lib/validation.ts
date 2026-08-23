@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { supportedCurrencyCodes } from '@/constants/currencies'
 
 const requiredText = (label: string) => z.string().trim().min(1, `${label} is required.`).max(100, `${label} must be 100 characters or fewer.`)
 const money = (label: string, allowZero = false) => z.number({ error: `${label} must be a number.` }).finite().refine((value) => allowZero ? value >= 0 : value > 0, `${label} must be ${allowZero ? 'zero or greater' : 'greater than zero'}.`)
@@ -20,9 +21,11 @@ export const authSchema = z.object({
 export const accountSchema = z.object({
   name: requiredText('Account name'),
   type: z.enum(['cash', 'bank', 'card', 'savings', 'other']),
-  currency: z.string().trim().length(3, 'Use a three-letter currency code.').regex(/^[A-Za-z]+$/, 'Currency can only contain letters.'),
+  currency: z.enum(supportedCurrencyCodes, { error: 'Choose a supported currency.' }),
   balance: z.number({ error: 'Balance must be a number.' }).finite(),
 })
+
+export const editAccountSchema = accountSchema.pick({ name: true, type: true, balance: true })
 
 export const transactionSchema = z.object({
   amount: money('Amount'),
@@ -54,11 +57,19 @@ export const categorySchema = z.object({
 
 export const categoryNameSchema = categorySchema.pick({ name: true })
 
+export const mccRuleSchema = z.object({
+  mcc: z.number({ error: 'MCC must be a number.' }).int().min(0).max(9999),
+  transaction_type: z.enum(['income', 'expense']),
+  category_id: z.string().min(1, 'Choose a category.'),
+})
+
 export type AuthFormValues = z.infer<typeof authSchema>
 export type AccountFormValues = z.infer<typeof accountSchema>
+export type EditAccountFormValues = z.infer<typeof editAccountSchema>
 export type TransactionFormValues = z.infer<typeof transactionSchema>
 export type BudgetFormValues = z.infer<typeof budgetSchema>
 export type EmergencyFundFormValues = z.infer<typeof emergencyFundSchema>
 export type SubscriptionFormValues = z.infer<typeof subscriptionSchema>
 export type CategoryFormValues = z.infer<typeof categorySchema>
 export type CategoryNameFormValues = z.infer<typeof categoryNameSchema>
+export type MCCRuleFormValues = z.infer<typeof mccRuleSchema>

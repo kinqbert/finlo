@@ -1,4 +1,6 @@
-export function formatMoney(minor: number, currency = 'UAH', compact = false) {
+import { baseCurrencyCode, type SupportedCurrencyCode } from '@/constants/currencies';
+
+export function formatMoney(minor: number, currency: SupportedCurrencyCode = baseCurrencyCode, compact = false) {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency,

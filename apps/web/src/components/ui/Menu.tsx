@@ -10,7 +10,7 @@ export function MenuContent({ children, className = '', ...props }: ComponentPro
 }
 
 export function MenuItem({ className = '', ...props }: ComponentProps<typeof DropdownMenu.Item>) {
-  return <DropdownMenu.Item className={`flex min-h-8.5 cursor-pointer items-center gap-2 rounded-lg px-2.5 text-xs outline-none hover:bg-canvas focus:bg-canvas ${className}`} {...props} />
+  return <DropdownMenu.Item className={`flex min-h-8.5 cursor-pointer items-center gap-2 rounded-lg px-2.5 text-xs outline-none hover:bg-canvas focus:bg-canvas data-disabled:cursor-not-allowed data-disabled:opacity-45 ${className}`} {...props} />
 }
 
 export function MenuSeparator({ className = '', ...props }: ComponentProps<typeof DropdownMenu.Separator>) {

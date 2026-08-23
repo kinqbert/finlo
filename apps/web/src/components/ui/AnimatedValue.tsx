@@ -1,9 +1,10 @@
 import { useEffect } from 'react'
 import { animate, useMotionValue, useReducedMotion, useTransform } from 'motion/react'
 import { span as MotionSpan } from 'motion/react-m'
-import { formatMoney } from '@/lib/format'
+import { formatMoney, formatMoneyAmount } from '@/lib/format'
 import { swiftTransition } from '@/lib/motion'
 import { cn } from '@/lib/cn'
+import { baseCurrencyCode } from '@/constants/currencies'
 
 type SharedAnimatedValueProps = {
   value: number
@@ -14,6 +15,7 @@ type AnimatedMoneyProps = SharedAnimatedValueProps & {
   currency?: string
   compact?: boolean
   prefix?: string
+  subtleCurrency?: boolean
 }
 
 type AnimatedNumberProps = SharedAnimatedValueProps & {
@@ -38,10 +40,20 @@ function useAnimatedValue(value: number) {
   return animatedValue
 }
 
-export function AnimatedMoney({ value, currency = 'UAH', compact = false, prefix = '', className }: AnimatedMoneyProps) {
+export function AnimatedMoney({ value, currency = baseCurrencyCode, compact = false, prefix = '', subtleCurrency = false, className }: AnimatedMoneyProps) {
   const animatedValue = useAnimatedValue(value)
   const formattedValue = useTransform(animatedValue, (latest) => `${prefix}${formatMoney(Math.round(latest), currency, compact)}`)
+  const formattedAmount = useTransform(animatedValue, (latest) => `${prefix}${formatMoneyAmount(Math.round(latest), currency, compact)}`)
   const finalValue = `${prefix}${formatMoney(value, currency, compact)}`
+
+  if (subtleCurrency) {
+    return (
+      <span aria-label={finalValue} className={cn('inline-flex items-baseline gap-[.22em] tabular-nums', className)}>
+        <span aria-hidden="true" className="text-[.45em] font-semibold tracking-[.04em] opacity-55">{currency}</span>
+        <MotionSpan aria-hidden="true">{formattedAmount}</MotionSpan>
+      </span>
+    )
+  }
 
   return (
     <span aria-label={finalValue} className={cn('tabular-nums', className)}>
