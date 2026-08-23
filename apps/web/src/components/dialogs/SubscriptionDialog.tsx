@@ -2,9 +2,10 @@ import { useState } from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Plus } from 'lucide-react'
-import { useForm } from 'react-hook-form'
+import { Controller, useForm } from 'react-hook-form'
 import { createSubscription } from '@/api'
 import { Button } from '@/components/ui/Button'
+import { DayOfMonthPicker } from '@/components/ui/DayOfMonthPicker'
 import { DialogForm, FinanceDialog, FormField, MoneyInput } from '@/components/ui/FinanceDialog'
 import { InlineError, SubmitButton } from '@/components/ui/Feedback'
 import { useFinanceMutation } from '@/hooks/useFinanceMutation'
@@ -36,10 +37,8 @@ export function SubscriptionDialog({ triggerVariant = 'primary', ...props }: Fin
       <FinanceDialog busy={busy} eyebrow="Recurring expense" title="Add a subscription" description="Include recurring payments in your monthly picture.">
         <DialogForm onSubmit={form.handleSubmit(submit)} spaced>
           <FormField label="Name" error={form.formState.errors.name?.message}><input placeholder="Netflix" disabled={busy} {...form.register('name')} /></FormField>
-          <div className="flex gap-3 max-[540px]:flex-col">
-            <FormField label="Monthly amount" error={form.formState.errors.amount?.message}><MoneyInput><input type="number" min="0.01" step="0.01" placeholder="0.00" disabled={busy} {...form.register('amount', { valueAsNumber: true })} /></MoneyInput></FormField>
-            <FormField label="Billing day" error={form.formState.errors.billing_day?.message}><input type="number" min="1" max="31" disabled={busy} {...form.register('billing_day', { valueAsNumber: true })} /></FormField>
-          </div>
+          <FormField label="Monthly amount" error={form.formState.errors.amount?.message}><MoneyInput><input type="number" min="0.01" step="0.01" placeholder="0.00" disabled={busy} {...form.register('amount', { valueAsNumber: true })} /></MoneyInput></FormField>
+          <Controller control={form.control} name="billing_day" render={({ field, fieldState }) => <DayOfMonthPicker value={field.value} onChange={field.onChange} disabled={busy} error={fieldState.error?.message} />} />
           <InlineError message={error} />
           <SubmitButton busy={busy} label="Add subscription" busyLabel="Adding subscription…" />
         </DialogForm>

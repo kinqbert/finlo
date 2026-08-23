@@ -535,7 +535,7 @@ components:
         name: { type: string }
         amount_minor: { type: integer, format: int64 }
         currency: { type: string }
-        billing_day: { type: integer, minimum: 1, maximum: 31 }
+        billing_day: { type: integer, minimum: 1, maximum: 31, description: Preferred billing day; shorter months use their final calendar day. }
         active: { type: boolean }
         next_payment_date: { type: string, format: date-time }
         created_at: { type: string, format: date-time }
@@ -548,7 +548,7 @@ components:
         name: { type: string, minLength: 1, maxLength: 100 }
         amount_minor: { type: integer, format: int64, minimum: 1 }
         currency: { type: string, pattern: '^[A-Za-z]{3}$' }
-        billing_day: { type: integer, minimum: 1, maximum: 31 }
+        billing_day: { type: integer, minimum: 1, maximum: 31, description: Preferred billing day; shorter months use their final calendar day. }
         active: { type: boolean }
         next_payment_date: { type: string, format: date }
     UpdateSubscriptionInput:
@@ -557,7 +557,7 @@ components:
         account_id: { type: string, format: uuid }
         name: { type: string, minLength: 1, maxLength: 100 }
         amount_minor: { type: integer, format: int64, minimum: 1 }
-        billing_day: { type: integer, minimum: 1, maximum: 31 }
+        billing_day: { type: integer, minimum: 1, maximum: 31, description: Preferred billing day; shorter months use their final calendar day. }
         active: { type: boolean }
         next_payment_date: { type: string, format: date }
     BalanceSummary:

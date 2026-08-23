@@ -28,6 +28,7 @@ func (s *Service) List(ctx context.Context, userID string) ([]model.Subscription
 	if err := s.db.WithContext(ctx).Where("user_id = ?", userID).Order("active DESC, billing_day ASC").Find(&subscriptions).Error; err != nil {
 		return nil, apierror.Internal(fmt.Errorf("list subscriptions: %w", err))
 	}
+	ResolveNextPaymentDates(subscriptions, time.Now().UTC())
 	return subscriptions, nil
 }
 
@@ -38,6 +39,10 @@ func (s *Service) Create(ctx context.Context, userID string, input CreateInput) 
 	nextPayment, err := shared.ParseOptionalDate(input.NextPaymentDate)
 	if err != nil {
 		return model.Subscription{}, err
+	}
+	if nextPayment == nil {
+		calculated := NextBillingDate(input.BillingDay, time.Now().UTC())
+		nextPayment = &calculated
 	}
 	active := true
 	if input.Active != nil {
@@ -93,6 +98,9 @@ func (s *Service) Update(ctx context.Context, userID, id string, input UpdateInp
 	}
 	if input.BillingDay != nil {
 		updates["billing_day"] = *input.BillingDay
+		if input.NextPaymentDate == nil {
+			updates["next_payment_date"] = NextBillingDate(*input.BillingDay, time.Now().UTC())
+		}
 	}
 	if input.Active != nil {
 		updates["active"] = *input.Active

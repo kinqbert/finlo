@@ -273,6 +273,7 @@ export interface Subscription {
   amount_minor: number;
   currency: string;
   /**
+   * Preferred billing day; shorter months use their final calendar day.
    * @min 1
    * @max 31
    */
@@ -302,6 +303,7 @@ export interface CreateSubscriptionInput {
   /** @pattern ^[A-Za-z]{3}$ */
   currency: string;
   /**
+   * Preferred billing day; shorter months use their final calendar day.
    * @min 1
    * @max 31
    */
@@ -325,6 +327,7 @@ export interface UpdateSubscriptionInput {
    */
   amount_minor?: number;
   /**
+   * Preferred billing day; shorter months use their final calendar day.
    * @min 1
    * @max 31
    */

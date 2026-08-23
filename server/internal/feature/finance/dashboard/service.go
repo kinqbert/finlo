@@ -8,6 +8,7 @@ import (
 	"github.com/kinqbert/finlo/server/internal/feature/finance/budget"
 	"github.com/kinqbert/finlo/server/internal/feature/finance/emergencyfund"
 	"github.com/kinqbert/finlo/server/internal/feature/finance/model"
+	"github.com/kinqbert/finlo/server/internal/feature/finance/subscription"
 	financetransaction "github.com/kinqbert/finlo/server/internal/feature/finance/transaction"
 	"github.com/kinqbert/finlo/server/internal/http/apierror"
 	"gorm.io/gorm"
@@ -106,6 +107,7 @@ func (s *Service) Get(ctx context.Context, userID string) (DTO, error) {
 		Order("billing_day ASC").Find(&result.Subscriptions).Error; err != nil {
 		return DTO{}, apierror.Internal(fmt.Errorf("load subscriptions: %w", err))
 	}
+	subscription.ResolveNextPaymentDates(result.Subscriptions, now)
 	if len(result.Subscriptions) > 0 {
 		result.Insights = append(result.Insights, Insight{
 			Type:    "subscriptions",
