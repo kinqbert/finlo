@@ -5,16 +5,19 @@ import { StatusBar } from 'expo-status-bar';
 import AppTabs from '@/components/app-tabs';
 import { AuthScreen } from '@/components/auth-screen';
 import { Palette } from '@/constants/theme';
+import { AppQueryProvider } from '@/lib/query';
 import { SessionProvider, useSession } from '@/lib/session';
 
 export default function TabLayout() {
   return (
-    <SessionProvider>
-      <ThemeProvider value={DefaultTheme}>
-        <StatusBar style="dark" />
-        <AppRoot />
-      </ThemeProvider>
-    </SessionProvider>
+    <AppQueryProvider>
+      <SessionProvider>
+        <ThemeProvider value={DefaultTheme}>
+          <StatusBar style="dark" />
+          <AppRoot />
+        </ThemeProvider>
+      </SessionProvider>
+    </AppQueryProvider>
   );
 }
 

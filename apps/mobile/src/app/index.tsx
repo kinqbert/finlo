@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { router } from 'expo-router';
 import { SymbolView, type AndroidSymbol, type SFSymbol } from 'expo-symbols';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
@@ -12,23 +11,17 @@ import type { Budget, Transaction } from '@/lib/types';
 export default function HomeScreen() {
   const session = useSession();
   const { data, user } = session;
-  const [refreshing, setRefreshing] = useState(false);
   const balance = data.dashboard.balances[0] ?? { currency: 'UAH', balance_minor: 0 };
   const income = data.transactions.filter((item) => item.type === 'income').reduce((sum, item) => sum + item.amount_minor, 0);
   const spending = data.transactions.filter((item) => item.type === 'expense').reduce((sum, item) => sum + item.amount_minor, 0);
   const savingsRate = income > 0 ? Math.max(0, Math.round(((income - spending) / income) * 100)) : 0;
-
-  async function refresh() {
-    setRefreshing(true);
-    try { await session.refresh(); } finally { setRefreshing(false); }
-  }
 
   return (
     <SafeAreaView style={styles.page} edges={['top']}>
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor={Palette.green} />}>
+        refreshControl={<RefreshControl refreshing={session.refreshing} onRefresh={() => void session.refresh()} tintColor={Palette.green} />}>
         <View style={styles.header}>
           <View><Text style={styles.eyebrow}>{new Intl.DateTimeFormat('en', { weekday: 'long', month: 'long', day: 'numeric' }).format(new Date()).toUpperCase()}</Text><Text style={styles.title}>Good morning,{`\n`}{user.name}.</Text></View>
           <Pressable style={styles.avatar} onPress={() => session.logout()}><Text style={styles.avatarText}>{`${user.name[0] ?? ''}${user.surname[0] ?? ''}`}</Text></Pressable>
