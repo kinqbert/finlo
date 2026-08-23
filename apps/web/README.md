@@ -1,73 +1,59 @@
-# React + TypeScript + Vite
+# Finlo web
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+The Finlo web client is a React, Vite, Tailwind CSS, Radix UI, React Router, Axios, TanStack Query, Zustand, React Hook Form, and Zod application.
 
-Currently, two official plugins are available:
+## Requirements
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- Node.js 22.22 or newer
+- The Finlo API running locally or available through `VITE_API_URL`
 
-## React Compiler
+## Development
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm ci
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Copy `.env.example` to `.env` to configure Google authentication or a deployed API. During local development, Vite proxies `/api`, `/auth`, and `/health` to `http://localhost:8080`.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Source structure
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```text
+src/
+├── api/         API client, authentication, and finance endpoints
+├── assets/      Static assets imported by the application
+├── components/  Reusable dialogs, finance widgets, layouts, and UI primitives
+├── constants/   Routes, demo data, and static finance mappings
+├── hooks/       Shared React hooks
+├── lib/         Framework configuration and general helpers
+├── pages/       Route-level screens
+├── providers/   Application-wide provider composition
+├── store/       Global client-only state managed by Zustand
+├── App.tsx      Session handling and route composition
+├── main.tsx     Browser entry point
+└── types.ts     Shared API and UI types
+```
+
+Axios owns HTTP transport, authentication headers, and refresh retries. TanStack Query owns remote API state. Zustand owns the small amount of global client-only state, including demo sessions, while transient UI state remains local. React Hook Form and Zod own form state and validation.
+
+## Routes
+
+- `/` — overview
+- `/accounts` — financial accounts and transactions
+- `/goals` — savings goals and emergency-fund progress
+- `/planning` — category budgets and recurring payments
+- `/settings` — category management
+- `/login` — authentication
+
+Authenticated routes redirect guests to `/login` and return them to the originally requested route after authentication.
+
+## Production deployment
+
+The app uses browser-history routing. Configure the production host to serve `index.html` for unknown client-side paths such as `/planning` and `/settings`. API and static-asset paths should keep their normal handling and must not use the SPA fallback.
+
+## Validation
+
+```bash
+npm run lint
+npm run build
 ```

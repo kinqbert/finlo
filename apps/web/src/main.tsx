@@ -1,17 +1,15 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { GoogleOAuthProvider } from '@react-oauth/google'
-import { QueryClientProvider } from '@tanstack/react-query'
 import './index.css'
 import App from './App.tsx'
-import { queryClient } from './lib/query.ts'
+import { AppErrorBoundary } from '@/components/ui/AppErrorBoundary'
+import { initializeMonitoring } from '@/lib/monitoring'
+import { AppProviders } from '@/providers/AppProviders'
 
-const googleClientID = import.meta.env.VITE_GOOGLE_CLIENT_ID
+void initializeMonitoring()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      {googleClientID ? <GoogleOAuthProvider clientId={googleClientID}><App /></GoogleOAuthProvider> : <App />}
-    </QueryClientProvider>
+    <AppErrorBoundary><AppProviders><App /></AppProviders></AppErrorBoundary>
   </StrictMode>,
 )

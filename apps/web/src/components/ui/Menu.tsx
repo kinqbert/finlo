@@ -4,7 +4,7 @@ import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
 export function MenuContent({ children, className = '', ...props }: ComponentProps<typeof DropdownMenu.Content> & { children: ReactNode }) {
   return (
     <DropdownMenu.Portal>
-      <DropdownMenu.Content className={`z-100 rounded-[11px] border border-line bg-white p-1 shadow-card ${className}`} {...props}>{children}</DropdownMenu.Content>
+      <DropdownMenu.Content className={`z-100 origin-[var(--radix-dropdown-menu-content-transform-origin)] rounded-[11px] border border-line bg-white p-1 shadow-card data-[state=open]:animate-[menu-in_.16s_cubic-bezier(.22,1,.36,1)] data-[state=closed]:animate-[menu-out_.1s_ease] ${className}`} {...props}>{children}</DropdownMenu.Content>
     </DropdownMenu.Portal>
   )
 }
