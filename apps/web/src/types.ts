@@ -7,6 +7,7 @@ export type {
 	CompleteMonobankInput,
   CreateAccountInput,
   CreateCategoryInput,
+	CreateGoalInput,
   CreateSubscriptionInput,
   CreateTransactionInput,
   Dashboard,

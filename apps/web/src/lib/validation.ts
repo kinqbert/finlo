@@ -42,6 +42,14 @@ export const budgetSchema = z.object({
 export const emergencyFundSchema = z.object({
   current: money('Saved amount', true),
   target: money('Target'),
+  currency: z.enum(supportedCurrencyCodes, { error: 'Choose a supported currency.' }),
+})
+
+export const goalSchema = z.object({
+  name: requiredText('Goal name'),
+  current: money('Saved amount', true),
+  target: money('Target'),
+  currency: z.enum(supportedCurrencyCodes, { error: 'Choose a supported currency.' }),
 })
 
 export const subscriptionSchema = z.object({
@@ -69,6 +77,7 @@ export type EditAccountFormValues = z.infer<typeof editAccountSchema>
 export type TransactionFormValues = z.infer<typeof transactionSchema>
 export type BudgetFormValues = z.infer<typeof budgetSchema>
 export type EmergencyFundFormValues = z.infer<typeof emergencyFundSchema>
+export type GoalFormValues = z.infer<typeof goalSchema>
 export type SubscriptionFormValues = z.infer<typeof subscriptionSchema>
 export type CategoryFormValues = z.infer<typeof categorySchema>
 export type CategoryNameFormValues = z.infer<typeof categoryNameSchema>

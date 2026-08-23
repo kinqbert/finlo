@@ -1,4 +1,4 @@
-import type { Account, AssignTransactionCategoryInput, Budget, Category, CompleteMonobankInput, CreateAccountInput, CreateCategoryInput, CreateSubscriptionInput, CreateTransactionInput, Dashboard, EmergencyFund, FinanceData, Goal, MCCCategoryRule, MonobankConnection, MonobankPreview, ReorderCategoriesInput, SaveBudgetInput, SaveEmergencyFundInput, SaveMCCRuleInput, Subscription, Transaction, UpdateAccountInput, UpdateCategoryInput } from '@/types'
+import type { Account, AssignTransactionCategoryInput, Budget, Category, CompleteMonobankInput, CreateAccountInput, CreateCategoryInput, CreateGoalInput, CreateSubscriptionInput, CreateTransactionInput, Dashboard, EmergencyFund, FinanceData, Goal, MCCCategoryRule, MonobankConnection, MonobankPreview, ReorderCategoriesInput, SaveBudgetInput, SaveEmergencyFundInput, SaveMCCRuleInput, Subscription, Transaction, UpdateAccountInput, UpdateCategoryInput } from '@/types'
 import { apiRequest } from './client'
 
 export async function loadFinanceData(signal?: AbortSignal): Promise<FinanceData> {
@@ -45,6 +45,9 @@ export const saveBudget = (input: SaveBudgetInput) =>
 
 export const saveEmergencyFund = (input: SaveEmergencyFundInput) =>
   apiRequest<EmergencyFund>({ url: '/api/emergency-fund', method: 'PUT', data: input })
+
+export const createGoal = (input: CreateGoalInput) =>
+  apiRequest<Goal>({ url: '/api/goals', method: 'POST', data: input })
 
 export const createSubscription = (input: CreateSubscriptionInput) =>
   apiRequest<Subscription>({ url: '/api/subscriptions', method: 'POST', data: input })

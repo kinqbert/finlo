@@ -4,7 +4,7 @@ import { AnimatedProgressRing } from '@/components/ui/Progress'
 import type { EmergencyFund } from '@/types'
 
 export function Goal({ fund, large = false }: { fund: EmergencyFund | null; large?: boolean }) {
-  if (!fund) return <EmptyState compact={!large} title="No goal set" copy="Set a target to start tracking your safety net." />
+  if (!fund) return <EmptyState compact={!large} title="No emergency fund yet" copy="Choose a currency and target to start building your safety net." />
   const percent = Math.min(100, Math.round((fund.current_minor / fund.target_minor) * 100))
 
   return (
