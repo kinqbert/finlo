@@ -3,7 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { ArrowDown, ArrowUp, Check, Pencil, Plus, Trash2, X } from 'lucide-react'
 import { AnimatePresence } from 'motion/react'
 import { useForm } from 'react-hook-form'
-import { createCategory, deleteCategory, reorderCategories, updateCategory } from '@/api'
+import { createCategory, deleteCategory, updateCategory } from '@/api'
 import { Button, IconButton } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { EmptyState } from '@/components/ui/EmptyState'
@@ -12,6 +12,7 @@ import { FormField } from '@/components/ui/FinanceDialog'
 import { MotionItem } from '@/components/ui/MotionItem'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { useFinanceMutation } from '@/hooks/useFinanceMutation'
+import { useReorderCategories } from '@/hooks/useReorderCategories'
 import { errorMessage } from '@/lib/format'
 import { categoryNameSchema, categorySchema, type CategoryFormValues, type CategoryNameFormValues } from '@/lib/validation'
 import type { Category, FinanceActions, FinanceData } from '@/types'
@@ -33,7 +34,7 @@ export function SettingsPage(props: FinanceActions) {
   const createMutation = useFinanceMutation(createCategory)
   const renameMutation = useFinanceMutation(({ id, name }: { id: string; name: string }) => updateCategory(id, name))
   const deleteMutation = useFinanceMutation(deleteCategory)
-  const reorderMutation = useFinanceMutation(({ type, categoryIDs }: { type: Category['type']; categoryIDs: string[] }) => reorderCategories(type, categoryIDs))
+  const reorderMutation = useReorderCategories()
   const addForm = useForm<CategoryFormValues>({ resolver: zodResolver(categorySchema), defaultValues: { name: '', type: 'expense' } })
   const renameForm = useForm<CategoryNameFormValues>({ resolver: zodResolver(categoryNameSchema), defaultValues: { name: '' } })
   const [editing, setEditing] = useState<string | null>(null)
