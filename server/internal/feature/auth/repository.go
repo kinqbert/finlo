@@ -9,11 +9,14 @@ import (
 )
 
 type Repository struct {
-	db *gorm.DB
+	db               *gorm.DB
+	userCreatedHooks []UserCreatedHook
 }
 
-func NewRepository(db *gorm.DB) *Repository {
-	return &Repository{db: db}
+type UserCreatedHook func(ctx context.Context, tx *gorm.DB, userID string) error
+
+func NewRepository(db *gorm.DB, userCreatedHooks ...UserCreatedHook) *Repository {
+	return &Repository{db: db, userCreatedHooks: userCreatedHooks}
 }
 
 func (r *Repository) FindByID(ctx context.Context, id string) (User, error) {
@@ -45,7 +48,13 @@ func (r *Repository) FindByEmail(ctx context.Context, email string) (User, error
 }
 
 func (r *Repository) CreateUser(ctx context.Context, user *User) error {
-	err := gorm.G[User](r.db).Create(ctx, user)
+	err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := tx.Create(user).Error; err != nil {
+			return err
+		}
+
+		return r.runUserCreatedHooks(ctx, tx, user.ID)
+	})
 
 	if errors.Is(err, gorm.ErrDuplicatedKey) {
 		return ErrEmailAlreadyExists
@@ -104,11 +113,24 @@ func (r *Repository) FindOrCreateGoogleUser(ctx context.Context, identity Google
 			return fmt.Errorf("create Google user: %w", err)
 		}
 
-		return nil
+		return r.runUserCreatedHooks(ctx, tx, result.ID)
 	})
 	if err != nil {
 		return User{}, err
 	}
 
 	return result, nil
+}
+
+func (r *Repository) runUserCreatedHooks(ctx context.Context, tx *gorm.DB, userID string) error {
+	for _, hook := range r.userCreatedHooks {
+		if hook == nil {
+			continue
+		}
+		if err := hook(ctx, tx, userID); err != nil {
+			return fmt.Errorf("provision new user: %w", err)
+		}
+	}
+
+	return nil
 }

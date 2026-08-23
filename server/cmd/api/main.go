@@ -7,6 +7,7 @@ import (
 
 	"github.com/kinqbert/finlo/server/internal/feature/auth"
 	"github.com/kinqbert/finlo/server/internal/feature/finance"
+	"github.com/kinqbert/finlo/server/internal/feature/finance/category"
 	"github.com/kinqbert/finlo/server/internal/feature/health"
 	"github.com/kinqbert/finlo/server/internal/http/apierror"
 	httpvalidator "github.com/kinqbert/finlo/server/internal/http/validator"
@@ -18,7 +19,7 @@ import (
 )
 
 func setupHandlers(e *echo.Echo, db *gorm.DB, cfg *config.Config) error {
-	authMiddleware := auth.RegisterRoutes(e, db, &cfg.JWT, &cfg.Google, &cfg.AuthCookie)
+	authMiddleware := auth.RegisterRoutes(e, db, &cfg.JWT, &cfg.Google, &cfg.AuthCookie, category.ProvisionDefaults)
 	finance.RegisterRoutes(e, db, authMiddleware)
 
 	if err := health.RegisterRoutes(e, db); err != nil {

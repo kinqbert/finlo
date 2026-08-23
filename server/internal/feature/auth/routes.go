@@ -8,12 +8,12 @@ import (
 	"gorm.io/gorm"
 )
 
-func RegisterRoutes(e *echo.Echo, db *gorm.DB, jwtConfig *config.JWTConfig, googleConfig *config.GoogleConfig, cookieConfig *config.AuthCookieConfig) *Middleware {
+func RegisterRoutes(e *echo.Echo, db *gorm.DB, jwtConfig *config.JWTConfig, googleConfig *config.GoogleConfig, cookieConfig *config.AuthCookieConfig, userCreatedHooks ...UserCreatedHook) *Middleware {
 	tokenService := NewTokenService(jwtConfig.AccessSecret, jwtConfig.RefreshSecret, jwtConfig.Issuer, jwtConfig.Audience)
 
 	authMiddleware := NewMiddleware(tokenService)
 
-	repository := NewRepository(db)
+	repository := NewRepository(db, userCreatedHooks...)
 	service := NewService(repository, tokenService, NewGoogleVerifier(googleConfig.ClientIDs))
 	sameSite := http.SameSiteLaxMode
 	switch cookieConfig.SameSite {
