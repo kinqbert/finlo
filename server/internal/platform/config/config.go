@@ -16,6 +16,7 @@ type Config struct {
 	Google     GoogleConfig
 	CORS       CORSConfig
 	AuthCookie AuthCookieConfig
+	Monobank   MonobankConfig
 }
 
 type DatabaseConfig struct {
@@ -46,6 +47,12 @@ type AuthCookieConfig struct {
 	Secure   bool
 	SameSite string
 	Domain   string
+}
+
+type MonobankConfig struct {
+	APIURL         string
+	WebhookBaseURL string
+	CredentialsKey string
 }
 
 func (d DatabaseConfig) GetDSN() string {
@@ -102,6 +109,11 @@ func Load() (Config, error) {
 			Secure:   cookieSecure,
 			SameSite: cookieSameSite,
 			Domain:   strings.TrimSpace(os.Getenv("AUTH_COOKIE_DOMAIN")),
+		},
+		Monobank: MonobankConfig{
+			APIURL:         strings.TrimRight(envOrDefault("MONOBANK_API_URL", "https://api.monobank.ua"), "/"),
+			WebhookBaseURL: strings.TrimRight(strings.TrimSpace(os.Getenv("MONOBANK_WEBHOOK_BASE_URL")), "/"),
+			CredentialsKey: strings.TrimSpace(os.Getenv("MONOBANK_CREDENTIALS_KEY")),
 		},
 	}
 

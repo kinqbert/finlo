@@ -1,6 +1,8 @@
 package dashboard
 
 import (
+	"time"
+
 	"github.com/kinqbert/finlo/server/internal/feature/finance/budget"
 	"github.com/kinqbert/finlo/server/internal/feature/finance/model"
 )
@@ -24,6 +26,11 @@ type Insight struct {
 
 type DTO struct {
 	Balances           []BalanceSummary     `json:"balances"`
+	TotalBalance       BalanceSummary       `json:"total_balance"`
+	TotalBalances      []BalanceSummary     `json:"total_balances"`
+	BalanceComplete    bool                 `json:"balance_complete"`
+	Unconverted        []string             `json:"unconverted_currencies"`
+	ExchangeRatesAsOf  *time.Time           `json:"exchange_rates_as_of,omitempty"`
 	RecentTransactions []model.Transaction  `json:"recent_transactions"`
 	Budgets            []BudgetProgress     `json:"budgets"`
 	EmergencyFund      *model.EmergencyFund `json:"emergency_fund"`

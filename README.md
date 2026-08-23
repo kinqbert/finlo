@@ -40,7 +40,25 @@ Set `GOOGLE_CLIENT_IDS` to the comma-separated web, iOS, and Android OAuth clien
 
 The web client keeps its short-lived access token in memory and asks the API to store the refresh token in an HttpOnly cookie. Native clients continue to receive and submit refresh tokens in JSON so they can use secure device storage. In production, set `AUTH_COOKIE_SECURE=true`; use `AUTH_COOKIE_SAME_SITE=none` only when the web app and API are genuinely cross-site, and then keep the API CORS allowlist explicit.
 
-Monobank import and model-generated AI insights are planned behind the existing transaction `source`/`external_id` fields and dashboard insight response. The initial dashboard uses deterministic insights until an AI provider is configured.
+### Monobank Personal API
+
+The Settings page provides guided Personal API onboarding. Finlo validates the token, lets the user choose accounts and jars, creates goals for selected jars, and registers a webhook. It deliberately does not download previous transactions; only statement items received after connection are imported.
+
+Generate a development-only credential-encryption key and add it to `server/.env`:
+
+```bash
+openssl rand -base64 32
+```
+
+Set the resulting value as `MONOBANK_CREDENTIALS_KEY`. `MONOBANK_WEBHOOK_BASE_URL` must be a public HTTPS URL that routes to the API; localhost development therefore requires an HTTPS tunnel. Never commit either value. Monobank tokens are accepted only by the Go API and are encrypted before database storage.
+
+Incoming transactions use per-user MCC rules. Known codes are categorized automatically; unknown codes use the relevant fallback category and are marked for review so the user can assign a category once or remember that MCC for the future.
+
+The API also fetches Monobank's public UAH, USD, and EUR valuation rates when the server starts and every 24 hours afterward. Daily snapshots are stored in PostgreSQL. The dashboard uses the latest Monobank buy rate to convert every account into a UAH total, while keeping each account displayed in its original currency.
+
+The Personal API is intended for private/personal usage. A public hosted Finlo service should migrate the connection flow to Monobank's Provider API.
+
+Model-generated AI insights remain planned behind the dashboard insight response. The initial dashboard uses deterministic insights until an AI provider is configured.
 
 ## Frontend quick start
 

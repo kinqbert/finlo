@@ -7,6 +7,8 @@ import (
 	"github.com/kinqbert/finlo/server/internal/feature/finance/category"
 	"github.com/kinqbert/finlo/server/internal/feature/finance/dashboard"
 	"github.com/kinqbert/finlo/server/internal/feature/finance/emergencyfund"
+	"github.com/kinqbert/finlo/server/internal/feature/finance/goal"
+	"github.com/kinqbert/finlo/server/internal/feature/finance/mcc"
 	"github.com/kinqbert/finlo/server/internal/feature/finance/subscription"
 	financetransaction "github.com/kinqbert/finlo/server/internal/feature/finance/transaction"
 	"github.com/labstack/echo/v5"
@@ -21,5 +23,7 @@ func RegisterRoutes(e *echo.Echo, db *gorm.DB, authMiddleware *auth.Middleware) 
 	financetransaction.RegisterRoutes(api, db)
 	budget.RegisterRoutes(api, db)
 	emergencyfund.RegisterRoutes(api, db)
+	goal.RegisterRoutes(api, db)
+	mcc.RegisterRoutes(api, db)
 	subscription.RegisterRoutes(api, db)
 }

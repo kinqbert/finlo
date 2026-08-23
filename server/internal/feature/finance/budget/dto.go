@@ -5,7 +5,7 @@ import "time"
 type CreateInput struct {
 	Category    string `json:"category" validate:"required,notblank,max=100"`
 	AmountMinor int64  `json:"amount_minor" validate:"required,gt=0"`
-	Currency    string `json:"currency" validate:"required,alpha,len=3"`
+	Currency    string `json:"currency" validate:"required,supportedcurrency"`
 	Month       string `json:"month" validate:"required"`
 }
 

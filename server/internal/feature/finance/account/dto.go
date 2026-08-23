@@ -3,7 +3,7 @@ package account
 type CreateInput struct {
 	Name         string `json:"name" validate:"required,notblank,max=100"`
 	Type         string `json:"type" validate:"required,oneof=cash bank card savings other"`
-	Currency     string `json:"currency" validate:"required,alpha,len=3"`
+	Currency     string `json:"currency" validate:"required,supportedcurrency"`
 	BalanceMinor int64  `json:"balance_minor"`
 }
 

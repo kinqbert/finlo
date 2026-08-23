@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
@@ -8,9 +9,13 @@ import (
 	"github.com/kinqbert/finlo/server/internal/feature/auth"
 	"github.com/kinqbert/finlo/server/internal/feature/finance"
 	"github.com/kinqbert/finlo/server/internal/feature/finance/category"
+	"github.com/kinqbert/finlo/server/internal/feature/finance/exchangerate"
+	"github.com/kinqbert/finlo/server/internal/feature/finance/mcc"
 	"github.com/kinqbert/finlo/server/internal/feature/health"
+	"github.com/kinqbert/finlo/server/internal/feature/monobank"
 	"github.com/kinqbert/finlo/server/internal/http/apierror"
 	httpvalidator "github.com/kinqbert/finlo/server/internal/http/validator"
+	"github.com/kinqbert/finlo/server/internal/integration/monobankapi"
 	"github.com/kinqbert/finlo/server/internal/platform/config"
 	"github.com/kinqbert/finlo/server/internal/platform/database"
 	"github.com/labstack/echo/v5"
@@ -19,8 +24,11 @@ import (
 )
 
 func setupHandlers(e *echo.Echo, db *gorm.DB, cfg *config.Config) error {
-	authMiddleware := auth.RegisterRoutes(e, db, &cfg.JWT, &cfg.Google, &cfg.AuthCookie, category.ProvisionDefaults)
+	authMiddleware := auth.RegisterRoutes(e, db, &cfg.JWT, &cfg.Google, &cfg.AuthCookie, category.ProvisionDefaults, mcc.ProvisionDefaults)
 	finance.RegisterRoutes(e, db, authMiddleware)
+	if err := monobank.RegisterRoutes(e, db, authMiddleware, &cfg.Monobank); err != nil {
+		return fmt.Errorf("set up Monobank handler: %w", err)
+	}
 
 	if err := health.RegisterRoutes(e, db); err != nil {
 		return fmt.Errorf("set up health handler: %w", err)
@@ -57,6 +65,11 @@ func main() {
 	if err := setupHandlers(e, db, &cfg); err != nil {
 		log.Fatalf("set up handlers: %v", err)
 	}
+
+	stopRates := exchangerate.StartScheduler(context.Background(), exchangerate.NewService(db, monobankapi.NewClient(cfg.Monobank.APIURL)), func(err error) {
+		e.Logger.Error("refresh Monobank exchange rates", "error", err)
+	})
+	defer stopRates()
 
 	e.GET("/", func(c *echo.Context) error {
 		return c.JSON(http.StatusOK, map[string]string{"name": "Finlo API", "status": "ok"})

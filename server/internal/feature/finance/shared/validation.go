@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	currencydomain "github.com/kinqbert/finlo/server/internal/domain/currency"
 	"github.com/kinqbert/finlo/server/internal/http/apierror"
 )
 
@@ -16,7 +17,7 @@ func ValidateID(id string) error {
 }
 
 func NormalizeCurrency(currency string) string {
-	return strings.ToUpper(strings.TrimSpace(currency))
+	return currencydomain.Normalize(currency)
 }
 
 func ParseMonth(value string) (time.Time, error) {

@@ -97,6 +97,12 @@ func (s *Service) Delete(ctx context.Context, userID, id string) error {
 	if references > 0 {
 		return apierror.Conflict("category_in_use", "category with budgets cannot be deleted")
 	}
+	if err := s.db.WithContext(ctx).Model(&model.MCCCategoryRule{}).Where("user_id = ? AND category_id = ?", userID, id).Count(&references).Error; err != nil {
+		return apierror.Internal(fmt.Errorf("check category MCC rules: %w", err))
+	}
+	if references > 0 {
+		return apierror.Conflict("category_in_use", "category with MCC rules cannot be deleted")
+	}
 	if err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		if err := tx.Delete(&category).Error; err != nil {
 			return fmt.Errorf("delete category: %w", err)

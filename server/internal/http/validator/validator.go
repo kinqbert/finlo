@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	playground "github.com/go-playground/validator/v10"
+	"github.com/kinqbert/finlo/server/internal/domain/currency"
 	"github.com/kinqbert/finlo/server/internal/http/apierror"
 )
 
@@ -44,6 +45,9 @@ func New() *Validator {
 			) != ""
 		},
 	)
+	_ = v.RegisterValidation("supportedcurrency", func(field playground.FieldLevel) bool {
+		return currency.IsSupported(field.Field().String())
+	})
 
 	return &Validator{
 		validate: v,
@@ -85,6 +89,9 @@ func validationMessage(err error) string {
 
 	case "oneof":
 		return field + " contains an unsupported value"
+
+	case "supportedcurrency":
+		return field + " must be a supported currency"
 
 	case "uuid":
 		return field + " must be a valid UUID"

@@ -4,7 +4,7 @@ type CreateInput struct {
 	AccountID       *string `json:"account_id" validate:"omitempty,uuid"`
 	Name            string  `json:"name" validate:"required,notblank,max=100"`
 	AmountMinor     int64   `json:"amount_minor" validate:"required,gt=0"`
-	Currency        string  `json:"currency" validate:"required,alpha,len=3"`
+	Currency        string  `json:"currency" validate:"required,supportedcurrency"`
 	BillingDay      int     `json:"billing_day" validate:"required,min=1,max=31"`
 	Active          *bool   `json:"active"`
 	NextPaymentDate *string `json:"next_payment_date"`
