@@ -3,17 +3,19 @@ package config
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/joho/godotenv"
 )
 
 type Config struct {
-	Database DatabaseConfig
-	Port     string
-	JWT      JWTConfig
-	Google   GoogleConfig
-	CORS     CORSConfig
+	Database   DatabaseConfig
+	Port       string
+	JWT        JWTConfig
+	Google     GoogleConfig
+	CORS       CORSConfig
+	AuthCookie AuthCookieConfig
 }
 
 type DatabaseConfig struct {
@@ -40,6 +42,12 @@ type CORSConfig struct {
 	AllowedOrigins []string
 }
 
+type AuthCookieConfig struct {
+	Secure   bool
+	SameSite string
+	Domain   string
+}
+
 func (d DatabaseConfig) GetDSN() string {
 	return fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s", d.Host, d.User, d.Password, d.Name, d.Port, d.SSLMode)
 }
@@ -54,6 +62,18 @@ func Load() (Config, error) {
 
 	if accessSecret == refreshSecret {
 		return Config{}, fmt.Errorf("Secrets cannot be the same")
+	}
+
+	cookieSecure, err := strconv.ParseBool(envOrDefault("AUTH_COOKIE_SECURE", "false"))
+	if err != nil {
+		return Config{}, fmt.Errorf("AUTH_COOKIE_SECURE must be true or false")
+	}
+	cookieSameSite := strings.ToLower(envOrDefault("AUTH_COOKIE_SAME_SITE", "lax"))
+	if cookieSameSite != "lax" && cookieSameSite != "strict" && cookieSameSite != "none" {
+		return Config{}, fmt.Errorf("AUTH_COOKIE_SAME_SITE must be lax, strict, or none")
+	}
+	if cookieSameSite == "none" && !cookieSecure {
+		return Config{}, fmt.Errorf("AUTH_COOKIE_SECURE must be true when AUTH_COOKIE_SAME_SITE is none")
 	}
 
 	cfg := Config{
@@ -77,6 +97,11 @@ func Load() (Config, error) {
 		},
 		CORS: CORSConfig{
 			AllowedOrigins: splitCSV(envOrDefault("CORS_ALLOWED_ORIGINS", "http://localhost:5173")),
+		},
+		AuthCookie: AuthCookieConfig{
+			Secure:   cookieSecure,
+			SameSite: cookieSameSite,
+			Domain:   strings.TrimSpace(os.Getenv("AUTH_COOKIE_DOMAIN")),
 		},
 	}
 

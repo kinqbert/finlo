@@ -6,7 +6,7 @@ type RegisterBodyDTO struct {
 	Name     string `json:"name" validate:"required,notblank,max=100"`
 	Surname  string `json:"surname" validate:"required,notblank,max=100"`
 	Email    string `json:"email" validate:"required,email,max=320"`
-	Password string `json:"password" validate:"required"`
+	Password string `json:"password" validate:"required,min=8,max=72"`
 }
 
 type LoginBodyDTO struct {
@@ -23,7 +23,7 @@ type GoogleLoginBodyDTO struct {
 }
 
 type Tokens struct {
-	Refresh string `json:"refresh_token"`
+	Refresh string `json:"refresh_token,omitempty"`
 	Access  string `json:"access_token"`
 }
 

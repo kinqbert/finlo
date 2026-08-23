@@ -1,0 +1,585 @@
+openapi: 3.1.0
+info:
+  title: Finlo API
+  version: 0.1.0
+  description: Shared REST contract for Finlo web and mobile clients.
+servers:
+  - url: http://localhost:8080
+paths:
+  /health:
+    get:
+      operationId: getHealth
+      responses:
+        '200':
+          description: API health
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Health' }
+  /auth/register:
+    post:
+      operationId: register
+      requestBody: { $ref: '#/components/requestBodies/Register' }
+      responses:
+        '201': { $ref: '#/components/responses/Tokens' }
+        default: { $ref: '#/components/responses/Error' }
+  /auth/login:
+    post:
+      operationId: login
+      requestBody: { $ref: '#/components/requestBodies/Login' }
+      responses:
+        '200': { $ref: '#/components/responses/Tokens' }
+        default: { $ref: '#/components/responses/Error' }
+  /auth/google:
+    post:
+      operationId: loginWithGoogle
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/GoogleLoginInput' }
+      responses:
+        '200': { $ref: '#/components/responses/Tokens' }
+        default: { $ref: '#/components/responses/Error' }
+  /auth/refresh:
+    post:
+      operationId: refreshTokens
+      description: Web clients use the HttpOnly refresh cookie. Native clients send the refresh token in the body.
+      security:
+        - refreshCookie: []
+        - {}
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RefreshInput' }
+      responses:
+        '200': { $ref: '#/components/responses/Tokens' }
+        default: { $ref: '#/components/responses/Error' }
+  /auth/logout:
+    post:
+      operationId: logout
+      security:
+        - refreshCookie: []
+      responses:
+        '204': { description: Signed out }
+  /auth/me:
+    get:
+      operationId: getCurrentUser
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Current user
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/User' }
+        default: { $ref: '#/components/responses/Error' }
+  /api/dashboard:
+    get:
+      operationId: getDashboard
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Dashboard snapshot
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Dashboard' }
+        default: { $ref: '#/components/responses/Error' }
+  /api/categories:
+    get:
+      operationId: listCategories
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Categories
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: '#/components/schemas/Category' } }
+    post:
+      operationId: createCategory
+      security: [{ bearerAuth: [] }]
+      requestBody: { $ref: '#/components/requestBodies/CreateCategory' }
+      responses:
+        '201':
+          description: Category created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Category' }
+        default: { $ref: '#/components/responses/Error' }
+  /api/categories/{id}:
+    parameters: [{ $ref: '#/components/parameters/ID' }]
+    patch:
+      operationId: updateCategory
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UpdateCategoryInput' }
+      responses:
+        '200':
+          description: Category updated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Category' }
+    delete:
+      operationId: deleteCategory
+      security: [{ bearerAuth: [] }]
+      responses:
+        '204': { description: Category deleted }
+  /api/categories/order:
+    put:
+      operationId: reorderCategories
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ReorderCategoriesInput' }
+      responses:
+        '200':
+          description: Reordered categories
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: '#/components/schemas/Category' } }
+  /api/accounts:
+    get:
+      operationId: listAccounts
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Accounts
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: '#/components/schemas/Account' } }
+    post:
+      operationId: createAccount
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateAccountInput' }
+      responses:
+        '201':
+          description: Account created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Account' }
+  /api/accounts/{id}:
+    parameters: [{ $ref: '#/components/parameters/ID' }]
+    patch:
+      operationId: updateAccount
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UpdateAccountInput' }
+      responses:
+        '200':
+          description: Account updated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Account' }
+    delete:
+      operationId: deleteAccount
+      security: [{ bearerAuth: [] }]
+      responses:
+        '204': { description: Account deleted }
+  /api/transactions:
+    get:
+      operationId: listTransactions
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Transactions
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: '#/components/schemas/Transaction' } }
+    post:
+      operationId: createTransaction
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateTransactionInput' }
+      responses:
+        '201':
+          description: Transaction created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Transaction' }
+  /api/transactions/{id}:
+    parameters: [{ $ref: '#/components/parameters/ID' }]
+    delete:
+      operationId: deleteTransaction
+      security: [{ bearerAuth: [] }]
+      responses:
+        '204': { description: Transaction deleted }
+  /api/budgets:
+    get:
+      operationId: listBudgets
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: query
+          name: month
+          schema: { type: string, pattern: '^\d{4}-\d{2}$' }
+      responses:
+        '200':
+          description: Budgets
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: '#/components/schemas/Budget' } }
+    post:
+      operationId: saveBudget
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SaveBudgetInput' }
+      responses:
+        '200':
+          description: Budget saved
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Budget' }
+  /api/budgets/{id}:
+    parameters: [{ $ref: '#/components/parameters/ID' }]
+    delete:
+      operationId: deleteBudget
+      security: [{ bearerAuth: [] }]
+      responses:
+        '204': { description: Budget deleted }
+  /api/emergency-fund:
+    get:
+      operationId: getEmergencyFund
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Emergency fund or null
+          content:
+            application/json:
+              schema: { oneOf: [{ $ref: '#/components/schemas/EmergencyFund' }, { type: 'null' }] }
+    put:
+      operationId: saveEmergencyFund
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SaveEmergencyFundInput' }
+      responses:
+        '200':
+          description: Emergency fund saved
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EmergencyFund' }
+  /api/subscriptions:
+    get:
+      operationId: listSubscriptions
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Subscriptions
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: '#/components/schemas/Subscription' } }
+    post:
+      operationId: createSubscription
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateSubscriptionInput' }
+      responses:
+        '201':
+          description: Subscription created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Subscription' }
+  /api/subscriptions/{id}:
+    parameters: [{ $ref: '#/components/parameters/ID' }]
+    patch:
+      operationId: updateSubscription
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UpdateSubscriptionInput' }
+      responses:
+        '200':
+          description: Subscription updated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Subscription' }
+    delete:
+      operationId: deleteSubscription
+      security: [{ bearerAuth: [] }]
+      responses:
+        '204': { description: Subscription deleted }
+components:
+  securitySchemes:
+    bearerAuth: { type: http, scheme: bearer, bearerFormat: JWT }
+    refreshCookie: { type: apiKey, in: cookie, name: finlo_refresh }
+  parameters:
+    ID: { in: path, name: id, required: true, schema: { type: string, format: uuid } }
+  requestBodies:
+    Register:
+      required: true
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/RegisterInput' }
+    Login:
+      required: true
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/LoginInput' }
+    CreateCategory:
+      required: true
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/CreateCategoryInput' }
+  responses:
+    Tokens:
+      description: Access and optional native refresh tokens
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Tokens' }
+    Error:
+      description: Request failed
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/APIError' }
+  schemas:
+    Health:
+      type: object
+      required: [status]
+      properties: { status: { type: string } }
+    APIError:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [message]
+          properties:
+            code: { type: string }
+            message: { type: string }
+            details: { type: object, additionalProperties: true }
+    Tokens:
+      type: object
+      required: [access_token]
+      properties:
+        access_token: { type: string }
+        refresh_token: { type: string }
+    RegisterInput:
+      type: object
+      required: [name, surname, email, password]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 100 }
+        surname: { type: string, minLength: 1, maxLength: 100 }
+        email: { type: string, format: email, maxLength: 320 }
+        password: { type: string, minLength: 8, maxLength: 72 }
+    LoginInput:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, format: email, maxLength: 320 }
+        password: { type: string }
+    GoogleLoginInput:
+      type: object
+      required: [id_token]
+      properties: { id_token: { type: string } }
+    RefreshInput:
+      type: object
+      required: [refresh_token]
+      properties: { refresh_token: { type: string } }
+    User:
+      type: object
+      required: [id, name, surname, email, created_at, updated_at]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        surname: { type: string }
+        email: { type: string, format: email }
+        avatar_url: { type: string, format: uri }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    Category:
+      type: object
+      required: [id, name, type, sort_order, created_at, updated_at]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        type: { type: string, enum: [income, expense] }
+        sort_order: { type: integer }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    CreateCategoryInput:
+      type: object
+      required: [name, type]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 100 }
+        type: { type: string, enum: [income, expense] }
+    UpdateCategoryInput:
+      type: object
+      required: [name]
+      properties: { name: { type: string, minLength: 1, maxLength: 100 } }
+    ReorderCategoriesInput:
+      type: object
+      required: [type, category_ids]
+      properties:
+        type: { type: string, enum: [income, expense] }
+        category_ids:
+          type: array
+          minItems: 1
+          items: { type: string, format: uuid }
+    Account:
+      type: object
+      required: [id, name, type, currency, balance_minor, created_at, updated_at]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        type: { type: string, enum: [cash, bank, card, savings, other] }
+        currency: { type: string, minLength: 3, maxLength: 3 }
+        balance_minor: { type: integer, format: int64 }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    CreateAccountInput:
+      type: object
+      required: [name, type, currency, balance_minor]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 100 }
+        type: { type: string, enum: [cash, bank, card, savings, other] }
+        currency: { type: string, pattern: '^[A-Za-z]{3}$' }
+        balance_minor: { type: integer, format: int64 }
+    UpdateAccountInput:
+      type: object
+      properties:
+        name: { type: string, minLength: 1, maxLength: 100 }
+        type: { type: string, enum: [cash, bank, card, savings, other] }
+        balance_minor: { type: integer, format: int64 }
+    Transaction:
+      type: object
+      required: [id, account_id, type, amount_minor, currency, category, description, occurred_at, source, created_at, updated_at]
+      properties:
+        id: { type: string, format: uuid }
+        account_id: { type: string, format: uuid }
+        type: { type: string, enum: [income, expense] }
+        amount_minor: { type: integer, format: int64 }
+        currency: { type: string }
+        category: { type: string }
+        description: { type: string }
+        occurred_at: { type: string, format: date-time }
+        source: { type: string, enum: [manual, monobank] }
+        external_id: { type: string }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    CreateTransactionInput:
+      type: object
+      required: [account_id, type, amount_minor, category, description, occurred_at]
+      properties:
+        account_id: { type: string, format: uuid }
+        type: { type: string, enum: [income, expense] }
+        amount_minor: { type: integer, format: int64, minimum: 1 }
+        category: { type: string, minLength: 1, maxLength: 100 }
+        description: { type: string, maxLength: 500 }
+        occurred_at: { type: string, format: date-time }
+    Budget:
+      type: object
+      required: [id, category, amount_minor, currency, month, created_at, updated_at]
+      properties:
+        id: { type: string, format: uuid }
+        category: { type: string }
+        amount_minor: { type: integer, format: int64 }
+        currency: { type: string }
+        month: { type: string, pattern: '^\d{4}-\d{2}$' }
+        spent_minor: { type: integer, format: int64 }
+        remaining_minor: { type: integer, format: int64 }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    SaveBudgetInput:
+      type: object
+      required: [category, amount_minor, currency, month]
+      properties:
+        category: { type: string, minLength: 1, maxLength: 100 }
+        amount_minor: { type: integer, format: int64, minimum: 1 }
+        currency: { type: string, pattern: '^[A-Za-z]{3}$' }
+        month: { type: string, pattern: '^\d{4}-\d{2}$' }
+    EmergencyFund:
+      type: object
+      required: [target_minor, current_minor, currency, created_at, updated_at]
+      properties:
+        target_minor: { type: integer, format: int64 }
+        current_minor: { type: integer, format: int64 }
+        currency: { type: string }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    SaveEmergencyFundInput:
+      type: object
+      required: [target_minor, current_minor, currency]
+      properties:
+        target_minor: { type: integer, format: int64, minimum: 1 }
+        current_minor: { type: integer, format: int64, minimum: 0 }
+        currency: { type: string, pattern: '^[A-Za-z]{3}$' }
+    Subscription:
+      type: object
+      required: [id, name, amount_minor, currency, billing_day, active, created_at, updated_at]
+      properties:
+        id: { type: string, format: uuid }
+        account_id: { type: string, format: uuid }
+        name: { type: string }
+        amount_minor: { type: integer, format: int64 }
+        currency: { type: string }
+        billing_day: { type: integer, minimum: 1, maximum: 31 }
+        active: { type: boolean }
+        next_payment_date: { type: string, format: date-time }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    CreateSubscriptionInput:
+      type: object
+      required: [name, amount_minor, currency, billing_day, active]
+      properties:
+        account_id: { type: string, format: uuid }
+        name: { type: string, minLength: 1, maxLength: 100 }
+        amount_minor: { type: integer, format: int64, minimum: 1 }
+        currency: { type: string, pattern: '^[A-Za-z]{3}$' }
+        billing_day: { type: integer, minimum: 1, maximum: 31 }
+        active: { type: boolean }
+        next_payment_date: { type: string, format: date }
+    UpdateSubscriptionInput:
+      type: object
+      properties:
+        account_id: { type: string, format: uuid }
+        name: { type: string, minLength: 1, maxLength: 100 }
+        amount_minor: { type: integer, format: int64, minimum: 1 }
+        billing_day: { type: integer, minimum: 1, maximum: 31 }
+        active: { type: boolean }
+        next_payment_date: { type: string, format: date }
+    BalanceSummary:
+      type: object
+      required: [currency, balance_minor]
+      properties:
+        currency: { type: string }
+        balance_minor: { type: integer, format: int64 }
+    Insight:
+      type: object
+      required: [type, title, message]
+      properties:
+        type: { type: string }
+        title: { type: string }
+        message: { type: string }
+    Dashboard:
+      type: object
+      required: [balances, recent_transactions, budgets, emergency_fund, subscriptions, insights]
+      properties:
+        balances: { type: array, items: { $ref: '#/components/schemas/BalanceSummary' } }
+        recent_transactions: { type: array, items: { $ref: '#/components/schemas/Transaction' } }
+        budgets: { type: array, items: { $ref: '#/components/schemas/Budget' } }
+        emergency_fund: { oneOf: [{ $ref: '#/components/schemas/EmergencyFund' }, { type: 'null' }] }
+        subscriptions: { type: array, items: { $ref: '#/components/schemas/Subscription' } }
+        insights: { type: array, items: { $ref: '#/components/schemas/Insight' } }

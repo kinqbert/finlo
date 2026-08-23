@@ -18,7 +18,7 @@ import (
 )
 
 func setupHandlers(e *echo.Echo, db *gorm.DB, cfg *config.Config) error {
-	authMiddleware := auth.RegisterRoutes(e, db, &cfg.JWT, &cfg.Google)
+	authMiddleware := auth.RegisterRoutes(e, db, &cfg.JWT, &cfg.Google, &cfg.AuthCookie)
 	finance.RegisterRoutes(e, db, authMiddleware)
 
 	if err := health.RegisterRoutes(e, db); err != nil {
@@ -47,9 +47,10 @@ func main() {
 	e.Use(middleware.RequestLogger())
 	e.Use(middleware.Recover())
 	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
-		AllowOrigins: cfg.CORS.AllowedOrigins,
-		AllowHeaders: []string{"Accept", "Authorization", "Content-Type"},
-		MaxAge:       3600,
+		AllowOrigins:     cfg.CORS.AllowedOrigins,
+		AllowHeaders:     []string{"Accept", "Authorization", "Content-Type", "X-Finlo-Token-Transport"},
+		AllowCredentials: true,
+		MaxAge:           3600,
 	}))
 
 	if err := setupHandlers(e, db, &cfg); err != nil {
