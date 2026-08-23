@@ -2,6 +2,8 @@
 
 Finlo mobile is an Expo SDK 57 application that can be compiled and installed as its own iOS or Android app. Expo Go is not required.
 
+The app uses Axios for API transport, SecureStore for native tokens, TanStack Query for remote data, Zustand for client-only demo state, and React Hook Form with Zod for forms and validation.
+
 ## Local configuration
 
 Install dependencies and create the environment file:

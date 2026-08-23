@@ -1,7 +1,9 @@
-import { createContext, useContext, useState, type PropsWithChildren } from 'react';
+import { createContext, useContext, type PropsWithChildren } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useShallow } from 'zustand/react/shallow';
 
 import * as api from './api';
+import { useAppStore } from './app-store';
 import { demoData, demoUser } from './demo-data';
 import { queryKeys } from './query';
 import type { FinanceData, Transaction, User } from './types';
@@ -28,9 +30,9 @@ type SessionContextValue = {
 
 const SessionContext = createContext<SessionContextValue | null>(null);
 
-async function loadStoredSession(): Promise<SessionData | null> {
+async function loadStoredSession(signal?: AbortSignal): Promise<SessionData | null> {
   if (!await api.restoreTokens()) return null;
-  try { return await api.loadSession(); }
+  try { return await api.loadSession(signal); }
   catch (error) {
     if (!(error instanceof api.ApiError) || error.status !== 401) throw error;
     await api.clearTokens();
@@ -44,10 +46,17 @@ function mutationError(error: unknown) {
 
 export function SessionProvider({ children }: PropsWithChildren) {
   const queryClient = useQueryClient();
-  const [demo, setDemo] = useState(false);
+  const { demo, demoData: currentDemoData, startApiSession, startDemoSession, endSession, updateDemoData } = useAppStore(useShallow((state) => ({
+    demo: state.demo,
+    demoData: state.demoData,
+    startApiSession: state.startApiSession,
+    startDemoSession: state.startDemoSession,
+    endSession: state.endSession,
+    updateDemoData: state.updateDemoData,
+  })));
   const sessionQuery = useQuery({
     queryKey: queryKeys.session,
-    queryFn: loadStoredSession,
+    queryFn: ({ signal }) => loadStoredSession(signal),
     enabled: !demo,
     retry: false,
   });
@@ -57,7 +66,7 @@ export function SessionProvider({ children }: PropsWithChildren) {
       return api.loadSession();
     },
     onSuccess: (session) => {
-      setDemo(false);
+      startApiSession();
       queryClient.setQueryData(queryKeys.session, session);
     },
   });
@@ -69,7 +78,7 @@ export function SessionProvider({ children }: PropsWithChildren) {
   });
 
   const status: Status = sessionQuery.isPending ? 'loading' : demo ? 'demo' : sessionQuery.data ? 'api' : 'guest';
-  const cachedSession = sessionQuery.data ?? { user: demoUser, data: demoData };
+  const cachedSession = demo ? { user: demoUser, data: currentDemoData } : sessionQuery.data ?? { user: demoUser, data: demoData };
 
   async function runAuth(action: () => Promise<void>) {
     await authMutation.mutateAsync(action);
@@ -101,7 +110,7 @@ export function SessionProvider({ children }: PropsWithChildren) {
         currency: account.currency,
         balance_minor: next.accounts.filter((item) => item.currency === account.currency).reduce((sum, item) => sum + item.balance_minor, 0),
       }];
-      queryClient.setQueryData(queryKeys.session, { user: cachedSession.user, data: next });
+      updateDemoData(next);
       return;
     }
     await transactionMutation.mutateAsync({ ...input, occurred_at: new Date().toISOString() });
@@ -119,12 +128,11 @@ export function SessionProvider({ children }: PropsWithChildren) {
     useDemo: () => {
       authMutation.reset();
       transactionMutation.reset();
-      setDemo(true);
-      queryClient.setQueryData(queryKeys.session, { user: demoUser, data: structuredClone(demoData) });
+      startDemoSession();
     },
     logout: async () => {
       await api.clearTokens();
-      setDemo(false);
+      endSession();
       queryClient.setQueryData(queryKeys.session, null);
       authMutation.reset();
       transactionMutation.reset();

@@ -1,22 +1,23 @@
 import { useState, type ComponentProps } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
 import * as Google from 'expo-auth-session/providers/google';
 import * as WebBrowser from 'expo-web-browser';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Controller, useForm, type Control, type FieldPath } from 'react-hook-form';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Palette } from '@/constants/theme';
 import { useSession } from '@/lib/session';
+import { authSchema, type AuthFormValues } from '@/lib/validation';
 
 WebBrowser.maybeCompleteAuthSession();
 
 export function AuthScreen() {
   const session = useSession();
   const [mode, setMode] = useState<'login' | 'register'>('login');
-  const [name, setName] = useState('');
-  const [surname, setSurname] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [busy, setBusy] = useState(false);
+  const [googleBusy, setGoogleBusy] = useState(false);
+  const form = useForm<AuthFormValues>({ resolver: zodResolver(authSchema), defaultValues: { mode: 'login', name: '', surname: '', email: '', password: '' } });
+  const busy = form.formState.isSubmitting || googleBusy;
   const googleConfigured = Boolean(
     process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID ||
     process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID ||
@@ -29,21 +30,18 @@ export function AuthScreen() {
     selectAccount: true,
   }, { scheme: 'finlo' });
 
-  async function submit() {
-    setBusy(true);
+  async function submit(values: AuthFormValues) {
     session.clearError();
     try {
-      if (mode === 'login') await session.login(email.trim(), password);
-      else await session.register(name.trim(), surname.trim(), email.trim(), password);
+      if (values.mode === 'login') await session.login(values.email.trim(), values.password);
+      else await session.register(values.name.trim(), values.surname.trim(), values.email.trim(), values.password);
     } catch {
       // The session context exposes a user-friendly API error.
-    } finally {
-      setBusy(false);
     }
   }
 
   async function googleSignIn() {
-    setBusy(true);
+    setGoogleBusy(true);
     session.clearError();
     try {
       const result = await promptAsync();
@@ -51,8 +49,15 @@ export function AuthScreen() {
     } catch {
       // The session context exposes a user-friendly API error.
     } finally {
-      setBusy(false);
+      setGoogleBusy(false);
     }
+  }
+
+  function selectMode(nextMode: AuthFormValues['mode']) {
+    setMode(nextMode);
+    form.setValue('mode', nextMode);
+    form.clearErrors();
+    session.clearError();
   }
 
   return (
@@ -67,14 +72,14 @@ export function AuthScreen() {
           </View>
           <View style={styles.card}>
             <View style={styles.toggle}>
-              <Pressable style={[styles.toggleButton, mode === 'login' && styles.toggleActive]} onPress={() => setMode('login')}><Text style={[styles.toggleText, mode === 'login' && styles.toggleTextActive]}>Sign in</Text></Pressable>
-              <Pressable style={[styles.toggleButton, mode === 'register' && styles.toggleActive]} onPress={() => setMode('register')}><Text style={[styles.toggleText, mode === 'register' && styles.toggleTextActive]}>Create account</Text></Pressable>
+              <Pressable style={[styles.toggleButton, mode === 'login' && styles.toggleActive]} onPress={() => selectMode('login')}><Text style={[styles.toggleText, mode === 'login' && styles.toggleTextActive]}>Sign in</Text></Pressable>
+              <Pressable style={[styles.toggleButton, mode === 'register' && styles.toggleActive]} onPress={() => selectMode('register')}><Text style={[styles.toggleText, mode === 'register' && styles.toggleTextActive]}>Create account</Text></Pressable>
             </View>
-            {mode === 'register' && <View style={styles.row}><Field label="First name" value={name} onChangeText={setName} autoComplete="name-given" /><Field label="Last name" value={surname} onChangeText={setSurname} autoComplete="name-family" /></View>}
-            <Field label="Email" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" autoComplete="email" placeholder="you@example.com" />
-            <Field label="Password" value={password} onChangeText={setPassword} secureTextEntry autoComplete={mode === 'login' ? 'current-password' : 'new-password'} placeholder="At least 8 characters" />
+            {mode === 'register' && <View style={styles.row}><Field control={form.control} name="name" label="First name" autoComplete="name-given" /><Field control={form.control} name="surname" label="Last name" autoComplete="name-family" /></View>}
+            <Field control={form.control} name="email" label="Email" keyboardType="email-address" autoCapitalize="none" autoComplete="email" placeholder="you@example.com" />
+            <Field control={form.control} name="password" label="Password" secureTextEntry autoComplete={mode === 'login' ? 'current-password' : 'new-password'} placeholder="At least 8 characters" />
             {session.error ? <Text style={styles.error}>{session.error}</Text> : null}
-            <Pressable style={({ pressed }) => [styles.primaryButton, (pressed || busy) && styles.pressed]} disabled={busy || !email || !password} onPress={submit}><Text style={styles.primaryText}>{busy ? 'Please wait…' : mode === 'login' ? 'Sign in' : 'Create my account'}</Text></Pressable>
+            <Pressable style={({ pressed }) => [styles.primaryButton, (pressed || busy) && styles.pressed]} disabled={busy} onPress={() => void form.handleSubmit(submit)()}><Text style={styles.primaryText}>{busy ? 'Please wait…' : mode === 'login' ? 'Sign in' : 'Create my account'}</Text></Pressable>
             <View style={styles.divider}><View style={styles.dividerLine} /><Text style={styles.dividerText}>OR</Text><View style={styles.dividerLine} /></View>
             <Pressable style={({ pressed }) => [styles.googleButton, (pressed || !request || !googleConfigured) && styles.pressed]} disabled={!request || !googleConfigured || busy} onPress={googleSignIn}><Text style={styles.googleLetter}>G</Text><Text style={styles.googleText}>{googleConfigured ? 'Continue with Google' : 'Google sign-in needs client IDs'}</Text></Pressable>
           </View>
@@ -86,9 +91,9 @@ export function AuthScreen() {
   );
 }
 
-type FieldProps = ComponentProps<typeof TextInput> & { label: string };
-function Field({ label, ...props }: FieldProps) {
-  return <View style={styles.field}><Text style={styles.label}>{label}</Text><TextInput style={styles.input} placeholderTextColor="#9AA39D" {...props} /></View>;
+type FieldProps = Omit<ComponentProps<typeof TextInput>, 'value' | 'onChangeText' | 'onBlur'> & { control: Control<AuthFormValues>; name: FieldPath<AuthFormValues>; label: string };
+function Field({ control, name, label, ...props }: FieldProps) {
+  return <Controller control={control} name={name} render={({ field, fieldState }) => <View style={styles.field}><Text style={styles.label}>{label}</Text><TextInput value={field.value} onChangeText={field.onChange} onBlur={field.onBlur} style={styles.input} placeholderTextColor="#9AA39D" {...props} />{fieldState.error ? <Text style={styles.fieldError}>{fieldState.error.message}</Text> : null}</View>} />;
 }
 
 const styles = StyleSheet.create({
@@ -117,6 +122,7 @@ const styles = StyleSheet.create({
   primaryText: { color: '#FFFFFF', fontSize: 13, fontWeight: '800' },
   pressed: { opacity: 0.55 },
   error: { color: '#A24837', fontSize: 11, lineHeight: 16 },
+  fieldError: { color: '#A24837', fontSize: 10, lineHeight: 14 },
   divider: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   dividerLine: { height: 1, flex: 1, backgroundColor: Palette.line },
   dividerText: { color: Palette.muted, fontSize: 9, fontWeight: '700' },

@@ -1,13 +1,16 @@
 import { useMemo, useState } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useLocalSearchParams } from 'expo-router';
 import { SymbolView } from 'expo-symbols';
 import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 
 import { BottomTabInset, Palette } from '@/constants/theme';
 import { formatMoney, formatShortDate } from '@/lib/format';
 import { useSession } from '@/lib/session';
 import type { Transaction } from '@/lib/types';
+import { transactionSchema, type TransactionFormValues } from '@/lib/validation';
 
 const expenseCategories = ['Groceries', 'Dining', 'Transport', 'Health', 'Subscriptions', 'Other'];
 const incomeCategories = ['Salary', 'Freelance', 'Gift', 'Other'];
@@ -45,28 +48,27 @@ function TransactionRow({ transaction }: { transaction: Transaction }) {
 
 function TransactionModal({ visible, initialType, onClose }: { visible: boolean; initialType: Transaction['type']; onClose: () => void }) {
   const session = useSession();
-  const [type, setType] = useState<Transaction['type']>(initialType);
-  const [accountID, setAccountID] = useState(session.data.accounts[0]?.id ?? '');
-  const [category, setCategory] = useState('Groceries');
-  const [amount, setAmount] = useState('');
-  const [note, setNote] = useState('');
-  const [busy, setBusy] = useState(false);
+  const form = useForm<TransactionFormValues>({ resolver: zodResolver(transactionSchema), defaultValues: { type: initialType, accountID: session.data.accounts[0]?.id ?? '', category: initialType === 'expense' ? 'Groceries' : 'Salary', amount: '', note: '' } });
+  const type = useWatch({ control: form.control, name: 'type' });
+  const accountID = useWatch({ control: form.control, name: 'accountID' });
+  const category = useWatch({ control: form.control, name: 'category' });
+  const amount = useWatch({ control: form.control, name: 'amount' });
+  const busy = form.formState.isSubmitting;
 
   const categories = type === 'expense' ? expenseCategories : incomeCategories;
 
-  async function submit() {
-    const amountMinor = Math.round(Number(amount.replace(',', '.')) * 100);
-    if (!accountID || !Number.isFinite(amountMinor) || amountMinor <= 0) return;
-    setBusy(true);
+  async function submit(values: TransactionFormValues) {
+    const amountMinor = Math.round(Number(values.amount.replace(',', '.')) * 100);
     try {
-      await session.addTransaction({ account_id: accountID, type, amount_minor: amountMinor, category, description: note.trim() });
-      setAmount('');
-      setNote('');
+      await session.addTransaction({ account_id: values.accountID, type: values.type, amount_minor: amountMinor, category: values.category, description: values.note.trim() });
+      form.reset({ ...values, amount: '', note: '' });
       onClose();
-    } finally { setBusy(false); }
+    } catch {
+      // The session context exposes a user-friendly API error.
+    }
   }
 
-  return <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}><KeyboardAvoidingView style={styles.modalPage} behavior={Platform.OS === 'ios' ? 'padding' : undefined}><SafeAreaView style={styles.modalSafe}><View style={styles.modalHeader}><Pressable onPress={onClose}><Text style={styles.cancel}>Cancel</Text></Pressable><Text style={styles.modalTitle}>Add transaction</Text><Pressable onPress={submit} disabled={busy}><Text style={styles.save}>{busy ? 'Saving' : 'Save'}</Text></Pressable></View><ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.modalContent}><View style={styles.typeToggle}><Pressable style={[styles.typeButton, type === 'expense' && styles.typeActive]} onPress={() => { setType('expense'); setCategory('Groceries'); }}><Text style={[styles.typeText, type === 'expense' && styles.typeTextActive]}>Expense</Text></Pressable><Pressable style={[styles.typeButton, type === 'income' && styles.typeActive]} onPress={() => { setType('income'); setCategory('Salary'); }}><Text style={[styles.typeText, type === 'income' && styles.typeTextActive]}>Income</Text></Pressable></View><Text style={styles.inputLabel}>AMOUNT</Text><View style={styles.amountInput}><Text style={styles.currency}>₴</Text><TextInput value={amount} onChangeText={setAmount} autoFocus keyboardType="decimal-pad" placeholder="0.00" placeholderTextColor="#B1B8B3" style={styles.amountText} /></View><Text style={styles.inputLabel}>ACCOUNT</Text><ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>{session.data.accounts.map((account) => <Pressable key={account.id} style={[styles.chip, accountID === account.id && styles.chipActive]} onPress={() => setAccountID(account.id)}><Text style={[styles.chipText, accountID === account.id && styles.chipTextActive]}>{account.name}</Text></Pressable>)}</ScrollView><Text style={styles.inputLabel}>CATEGORY</Text><View style={styles.chips}>{categories.map((item) => <Pressable key={item} style={[styles.chip, category === item && styles.chipActive]} onPress={() => setCategory(item)}><Text style={[styles.chipText, category === item && styles.chipTextActive]}>{item}</Text></Pressable>)}</View><Text style={styles.inputLabel}>NOTE</Text><TextInput value={note} onChangeText={setNote} placeholder="What was this for?" placeholderTextColor="#9AA39D" style={styles.noteInput} /><Pressable style={[styles.submitButton, (!amount || busy) && styles.disabled]} disabled={!amount || busy} onPress={submit}><Text style={styles.submitText}>{busy ? 'Saving…' : `Add ${type}`}</Text></Pressable></ScrollView></SafeAreaView></KeyboardAvoidingView></Modal>;
+  return <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}><KeyboardAvoidingView style={styles.modalPage} behavior={Platform.OS === 'ios' ? 'padding' : undefined}><SafeAreaView style={styles.modalSafe}><View style={styles.modalHeader}><Pressable onPress={onClose}><Text style={styles.cancel}>Cancel</Text></Pressable><Text style={styles.modalTitle}>Add transaction</Text><Pressable onPress={() => void form.handleSubmit(submit)()} disabled={busy}><Text style={styles.save}>{busy ? 'Saving' : 'Save'}</Text></Pressable></View><ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.modalContent}><View style={styles.typeToggle}><Pressable style={[styles.typeButton, type === 'expense' && styles.typeActive]} onPress={() => { form.setValue('type', 'expense'); form.setValue('category', 'Groceries'); }}><Text style={[styles.typeText, type === 'expense' && styles.typeTextActive]}>Expense</Text></Pressable><Pressable style={[styles.typeButton, type === 'income' && styles.typeActive]} onPress={() => { form.setValue('type', 'income'); form.setValue('category', 'Salary'); }}><Text style={[styles.typeText, type === 'income' && styles.typeTextActive]}>Income</Text></Pressable></View><Text style={styles.inputLabel}>AMOUNT</Text><View style={styles.amountInput}><Text style={styles.currency}>₴</Text><Controller control={form.control} name="amount" render={({ field }) => <TextInput value={field.value} onChangeText={field.onChange} onBlur={field.onBlur} autoFocus keyboardType="decimal-pad" placeholder="0.00" placeholderTextColor="#B1B8B3" style={styles.amountText} />} /></View>{form.formState.errors.amount ? <Text style={styles.formError}>{form.formState.errors.amount.message}</Text> : null}<Text style={styles.inputLabel}>ACCOUNT</Text><ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>{session.data.accounts.map((account) => <Pressable key={account.id} style={[styles.chip, accountID === account.id && styles.chipActive]} onPress={() => form.setValue('accountID', account.id, { shouldValidate: true })}><Text style={[styles.chipText, accountID === account.id && styles.chipTextActive]}>{account.name}</Text></Pressable>)}</ScrollView>{form.formState.errors.accountID ? <Text style={styles.formError}>{form.formState.errors.accountID.message}</Text> : null}<Text style={styles.inputLabel}>CATEGORY</Text><View style={styles.chips}>{categories.map((item) => <Pressable key={item} style={[styles.chip, category === item && styles.chipActive]} onPress={() => form.setValue('category', item, { shouldValidate: true })}><Text style={[styles.chipText, category === item && styles.chipTextActive]}>{item}</Text></Pressable>)}</View><Text style={styles.inputLabel}>NOTE</Text><Controller control={form.control} name="note" render={({ field }) => <TextInput value={field.value} onChangeText={field.onChange} onBlur={field.onBlur} placeholder="What was this for?" placeholderTextColor="#9AA39D" style={styles.noteInput} />} />{form.formState.errors.note ? <Text style={styles.formError}>{form.formState.errors.note.message}</Text> : null}{session.error ? <Text style={styles.formError}>{session.error}</Text> : null}<Pressable style={[styles.submitButton, (!amount || busy) && styles.disabled]} disabled={!amount || busy} onPress={() => void form.handleSubmit(submit)()}><Text style={styles.submitText}>{busy ? 'Saving…' : `Add ${type}`}</Text></Pressable></ScrollView></SafeAreaView></KeyboardAvoidingView></Modal>;
 }
 
 const styles = StyleSheet.create({
@@ -130,4 +132,5 @@ const styles = StyleSheet.create({
   submitButton: { height: 50, alignItems: 'center', justifyContent: 'center', marginTop: 28, borderRadius: 14, backgroundColor: Palette.green },
   submitText: { color: '#FFFFFF', fontSize: 12, fontWeight: '800' },
   disabled: { opacity: .5 },
+  formError: { color: '#A24837', fontSize: 10, lineHeight: 14, marginTop: 6 },
 });
