@@ -92,7 +92,6 @@ db-migrate:
 db-setup: db-up db-migrate
 
 db-reset:
-	@test "$(CONFIRM)" = "1" || (echo "Refusing to delete local database data. Re-run with: make db-reset CONFIRM=1" && exit 1)
 	$(COMPOSE) down
 	@if docker volume inspect $(DB_VOLUME) >/dev/null 2>&1; then docker volume rm $(DB_VOLUME); fi
 	$(MAKE) db-setup
