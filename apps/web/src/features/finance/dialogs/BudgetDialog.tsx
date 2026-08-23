@@ -2,15 +2,19 @@ import { useState, type FormEvent } from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
 import { Plus } from 'lucide-react'
 import { saveBudget } from '../../../api'
+import { Button } from '../../../components/ui/Button'
 import { DialogForm, FinanceDialog, FormField, MoneyInput } from '../../../components/ui/FinanceDialog'
 import { InlineError, SubmitButton } from '../../../components/ui/Feedback'
 import { errorMessage } from '../../../lib/format'
 import type { FinanceActions } from '../types'
+import { useFinanceMutation } from '../useFinanceMutation'
 
 export function BudgetDialog(props: FinanceActions) {
+  const saveMutation = useFinanceMutation(saveBudget)
   const [open, setOpen] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const expenseCategories = props.data.categories.filter((category) => category.type === 'expense').sort((a, b) => a.sort_order - b.sort_order)
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -27,17 +31,17 @@ export function BudgetDialog(props: FinanceActions) {
         else next.budgets.push({ ...input, id: crypto.randomUUID(), spent_minor: 0, remaining_minor: input.amount_minor })
         next.dashboard.budgets = next.budgets
         props.onDemoChange(next)
-      } else { await saveBudget(input); await props.onCreated() }
+      } else await saveMutation.mutateAsync(input)
       setOpen(false)
     } catch (caught) { setError(errorMessage(caught, 'Could not save budget.')) } finally { setBusy(false) }
   }
 
   return (
     <Dialog.Root open={open} onOpenChange={(next) => { if (!busy) { setOpen(next); setError('') } }}>
-      <Dialog.Trigger asChild><button className="inline-flex min-h-10.5 cursor-pointer items-center justify-center gap-2 rounded-xl border border-brand bg-brand px-4 text-[13px] font-bold text-white shadow-[0_7px_18px_rgba(21,63,46,.16)] hover:bg-brand-dark"><Plus size={17} /> Add budget</button></Dialog.Trigger>
+      <Dialog.Trigger asChild><Button variant="primary"><Plus size={16} /> Add budget</Button></Dialog.Trigger>
       <FinanceDialog busy={busy} eyebrow="Monthly plan" title="Add a category budget" description="Set a limit for the current month. Saving the same category updates it.">
         <DialogForm onSubmit={submit} spaced>
-          <FormField label="Category"><input name="category" placeholder="Groceries" disabled={busy} required /></FormField>
+          <FormField label="Category"><input name="category" list="expense-categories" placeholder="Groceries" disabled={busy} required /><datalist id="expense-categories">{expenseCategories.map((category) => <option key={category.id} value={category.name} />)}</datalist></FormField>
           <FormField label="Monthly limit"><MoneyInput><input name="amount" type="number" min="0.01" step="0.01" placeholder="0.00" disabled={busy} required /></MoneyInput></FormField>
           <InlineError message={error} />
           <SubmitButton busy={busy} label="Save budget" busyLabel="Saving budget…" />

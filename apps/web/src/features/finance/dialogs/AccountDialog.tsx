@@ -2,13 +2,16 @@ import { useState, type FormEvent } from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
 import { WalletCards } from 'lucide-react'
 import { createAccount } from '../../../api'
+import { Button } from '../../../components/ui/Button'
 import { DialogForm, FinanceDialog, FormField, MoneyInput } from '../../../components/ui/FinanceDialog'
 import { InlineError, SubmitButton } from '../../../components/ui/Feedback'
 import { errorMessage } from '../../../lib/format'
 import type { Account } from '../../../types'
 import type { FinanceActions } from '../types'
+import { useFinanceMutation } from '../useFinanceMutation'
 
 export function AccountDialog(props: FinanceActions) {
+  const createMutation = useFinanceMutation(createAccount)
   const [open, setOpen] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -22,14 +25,14 @@ export function AccountDialog(props: FinanceActions) {
     setError('')
     try {
       if (props.isDemo) { const next = structuredClone(props.data); next.accounts.push(account); props.onDemoChange(next) }
-      else { await createAccount(account); await props.onCreated() }
+      else await createMutation.mutateAsync(account)
       setOpen(false)
     } catch (caught) { setError(errorMessage(caught, 'Could not add account.')) } finally { setBusy(false) }
   }
 
   return (
     <Dialog.Root open={open} onOpenChange={(next) => { if (!busy) { setOpen(next); setError('') } }}>
-      <Dialog.Trigger asChild><button className="inline-flex min-h-10.5 cursor-pointer items-center justify-center gap-2 rounded-xl border border-line bg-white px-4 text-[13px] font-bold"><WalletCards size={17} /> Add account</button></Dialog.Trigger>
+      <Dialog.Trigger asChild><Button><WalletCards size={16} /> Add account</Button></Dialog.Trigger>
       <FinanceDialog busy={busy} eyebrow="New account" title="Connect your money map" description="Add a balance now. Monobank sync can be connected later.">
         <DialogForm onSubmit={submit} spaced>
           <FormField label="Account name"><input name="name" placeholder="Everyday card" disabled={busy} required /></FormField>

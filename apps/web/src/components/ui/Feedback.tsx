@@ -1,4 +1,5 @@
 import { AlertCircle, LoaderCircle } from 'lucide-react'
+import { Button } from './Button'
 
 export function InlineError({ message }: { message: string }) {
   if (!message) return null
@@ -6,5 +7,5 @@ export function InlineError({ message }: { message: string }) {
 }
 
 export function SubmitButton({ busy, label, busyLabel, disabled = false }: { busy: boolean; label: string; busyLabel: string; disabled?: boolean }) {
-  return <button className="inline-flex min-h-10.5 w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-brand bg-brand px-4 text-[13px] font-bold text-white shadow-[0_7px_18px_rgba(21,63,46,.16)] hover:bg-brand-dark disabled:cursor-not-allowed disabled:opacity-60" disabled={busy || disabled}>{busy && <LoaderCircle className="animate-spin" size={16} />}{busy ? busyLabel : label}</button>
+  return <Button variant="primary" fullWidth disabled={busy || disabled}>{busy && <LoaderCircle className="animate-spin" size={15} />}{busy ? busyLabel : label}</Button>
 }

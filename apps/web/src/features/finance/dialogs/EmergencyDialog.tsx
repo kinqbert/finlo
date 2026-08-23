@@ -2,12 +2,15 @@ import { useState, type FormEvent } from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
 import { Target } from 'lucide-react'
 import { saveEmergencyFund } from '../../../api'
+import { Button } from '../../../components/ui/Button'
 import { DialogForm, FinanceDialog, FormField, MoneyInput } from '../../../components/ui/FinanceDialog'
 import { InlineError, SubmitButton } from '../../../components/ui/Feedback'
 import { errorMessage } from '../../../lib/format'
 import type { FinanceActions } from '../types'
+import { useFinanceMutation } from '../useFinanceMutation'
 
 export function EmergencyDialog(props: FinanceActions) {
+  const saveMutation = useFinanceMutation(saveEmergencyFund)
   const [open, setOpen] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -22,14 +25,14 @@ export function EmergencyDialog(props: FinanceActions) {
     setError('')
     try {
       if (props.isDemo) { const next = structuredClone(props.data); next.dashboard.emergency_fund = input; props.onDemoChange(next) }
-      else { await saveEmergencyFund(input); await props.onCreated() }
+      else await saveMutation.mutateAsync(input)
       setOpen(false)
     } catch (caught) { setError(errorMessage(caught, 'Could not save emergency fund.')) } finally { setBusy(false) }
   }
 
   return (
     <Dialog.Root open={open} onOpenChange={(next) => { if (!busy) { setOpen(next); setError('') } }}>
-      <Dialog.Trigger asChild><button className="inline-flex min-h-10.5 cursor-pointer items-center justify-center gap-2 rounded-xl border border-line bg-white px-4 text-[13px] font-bold"><Target size={17} /> {fund ? 'Edit goal' : 'Set goal'}</button></Dialog.Trigger>
+      <Dialog.Trigger asChild><Button><Target size={16} /> {fund ? 'Edit goal' : 'Set goal'}</Button></Dialog.Trigger>
       <FinanceDialog busy={busy} eyebrow="Safety net" title="Emergency fund goal" description="Track what you have saved against the amount that feels safe.">
         <DialogForm onSubmit={submit} spaced>
           <div className="flex gap-3 max-[540px]:flex-col">

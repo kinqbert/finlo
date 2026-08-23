@@ -1,8 +1,5 @@
-export function Logo({ light = false }: { light?: boolean }) {
-  return (
-    <div className={`flex items-center gap-2.5 font-heading text-2xl font-extrabold tracking-[-1px] ${light ? 'text-white' : 'text-brand'}`}>
-      <span className={`grid size-7 place-items-center rounded-tl-[9px] rounded-tr-sm rounded-br-[9px] rounded-bl-sm text-base ${light ? 'bg-lime text-brand' : 'bg-brand text-lime'}`}>F</span>
-      finlo
-    </div>
-  )
+import finloLogo from '../../assets/finlo-logo.svg'
+
+export function Logo({ light = false, compact = false }: { light?: boolean; compact?: boolean }) {
+  return <img className={`block w-auto ${compact ? 'h-5.25' : 'h-7.5'} ${light ? 'brightness-0 invert' : ''}`} src={finloLogo} alt="Finlo" />
 }

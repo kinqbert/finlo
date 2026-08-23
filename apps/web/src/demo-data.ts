@@ -15,6 +15,15 @@ export const demoUser: User = {
 }
 
 export const demoData: FinanceData = {
+  categories: [
+    { id: 'c1', name: 'Groceries', type: 'expense', sort_order: 0 },
+    { id: 'c2', name: 'Dining', type: 'expense', sort_order: 1 },
+    { id: 'c3', name: 'Transport', type: 'expense', sort_order: 2 },
+    { id: 'c4', name: 'Health', type: 'expense', sort_order: 3 },
+    { id: 'c5', name: 'Subscriptions', type: 'expense', sort_order: 4 },
+    { id: 'c6', name: 'Salary', type: 'income', sort_order: 0 },
+    { id: 'c7', name: 'Freelance', type: 'income', sort_order: 1 },
+  ],
   accounts: [
     { id: 'a1', name: 'Monobank Black', type: 'card', currency: 'UAH', balance_minor: 4862500 },
     { id: 'a2', name: 'Cash', type: 'cash', currency: 'UAH', balance_minor: 840000 },

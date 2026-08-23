@@ -1,4 +1,4 @@
-import type { Account, Budget, Dashboard, EmergencyFund, FinanceData, Subscription, Tokens, Transaction, User } from './types'
+import type { Account, Budget, Category, Dashboard, EmergencyFund, FinanceData, Subscription, Tokens, Transaction, User } from './types'
 
 const API_URL = (import.meta.env.VITE_API_URL ?? '').replace(/\/$/, '')
 const ACCESS_KEY = 'finlo.access-token'
@@ -94,15 +94,33 @@ export async function loginWithGoogle(idToken: string) {
 export const getMe = () => apiFetch<User>('/auth/me')
 
 export async function loadFinanceData(): Promise<FinanceData> {
-  const [dashboard, accounts, transactions, budgets, subscriptions] = await Promise.all([
+  const [dashboard, categories, accounts, transactions, budgets, subscriptions] = await Promise.all([
     apiFetch<Dashboard>('/api/dashboard'),
+    apiFetch<Category[]>('/api/categories'),
     apiFetch<Account[]>('/api/accounts'),
     apiFetch<Transaction[]>('/api/transactions'),
     apiFetch<Budget[]>(`/api/budgets?month=${new Date().toISOString().slice(0, 7)}`),
     apiFetch<Subscription[]>('/api/subscriptions'),
   ])
-  return { dashboard, accounts, transactions, budgets, subscriptions }
+  return { dashboard, categories, accounts, transactions, budgets, subscriptions }
 }
+
+export async function loadSession() {
+  const [user, data] = await Promise.all([getMe(), loadFinanceData()])
+  return { user, data }
+}
+
+export const createCategory = (input: { name: string; type: Category['type'] }) =>
+  apiFetch<Category>('/api/categories', { method: 'POST', body: JSON.stringify(input) })
+
+export const updateCategory = (id: string, name: string) =>
+  apiFetch<Category>(`/api/categories/${id}`, { method: 'PATCH', body: JSON.stringify({ name }) })
+
+export const deleteCategory = (id: string) =>
+  apiFetch<void>(`/api/categories/${id}`, { method: 'DELETE' })
+
+export const reorderCategories = (type: Category['type'], categoryIDs: string[]) =>
+  apiFetch<Category[]>('/api/categories/order', { method: 'PUT', body: JSON.stringify({ type, category_ids: categoryIDs }) })
 
 export const createAccount = (input: { name: string; type: Account['type']; currency: string; balance_minor: number }) =>
   apiFetch<Account>('/api/accounts', { method: 'POST', body: JSON.stringify(input) })

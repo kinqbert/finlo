@@ -1,13 +1,15 @@
 import { useState, type FormEvent, type ReactNode } from 'react'
+import { useMutation } from '@tanstack/react-query'
 import { GoogleLogin } from '@react-oauth/google'
 import { ArrowUpRight, LoaderCircle, Sparkles } from 'lucide-react'
 import { ApiError, login, loginWithGoogle, register } from '../../api'
+import { Button } from '../../components/ui/Button'
 import { InlineError } from '../../components/ui/Feedback'
 import { Logo } from '../../components/ui/Logo'
 
 function Field(props: { label: string; name: string; type?: string; placeholder?: string; autoComplete?: string; disabled?: boolean }) {
   const { label, ...inputProps } = props
-  return <label className="grid flex-1 gap-1.5"><span className="text-[10px] font-bold text-[#5d6a63]">{label}</span><input className="h-10.5 w-full min-w-0 rounded-[10px] border border-[#dfe3db] bg-[#fbfcf8] px-3 text-xs" required {...inputProps} /></label>
+  return <label className="grid flex-1 gap-1.25"><span className="text-[9px] font-bold text-[#5d6a63]">{label}</span><input className="h-9.5 w-full min-w-0 rounded-[9px] border border-[#dfe3db] bg-[#fbfcf8] px-3 text-xs" required {...inputProps} /></label>
 }
 
 function AuthToggle({ active, disabled, children, onClick }: { active: boolean; disabled: boolean; children: ReactNode; onClick: () => void }) {
@@ -16,27 +18,33 @@ function AuthToggle({ active, disabled, children, onClick }: { active: boolean; 
 
 export function AuthScreen({ onAuthenticated, onDemo }: { onAuthenticated: () => Promise<void>; onDemo: () => void }) {
   const [mode, setMode] = useState<'login' | 'register'>('login')
-  const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const googleClientID = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined
+  const authentication = useMutation({
+    mutationFn: async (action: () => Promise<unknown>) => {
+      await action()
+      await onAuthenticated()
+    },
+  })
+  const busy = authentication.isPending
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const form = new FormData(event.currentTarget)
-    setBusy(true)
+    authentication.reset()
     setError('')
     try {
-      if (mode === 'login') await login(String(form.get('email')), String(form.get('password')))
-      else await register(String(form.get('name')), String(form.get('surname')), String(form.get('email')), String(form.get('password')))
-      await onAuthenticated()
-    } catch (caught) { setError(caught instanceof ApiError ? caught.message : 'Could not connect to Finlo') } finally { setBusy(false) }
+      await authentication.mutateAsync(() => mode === 'login'
+        ? login(String(form.get('email')), String(form.get('password')))
+        : register(String(form.get('name')), String(form.get('surname')), String(form.get('email')), String(form.get('password'))))
+    } catch (caught) { setError(caught instanceof ApiError ? caught.message : 'Could not connect to Finlo') }
   }
 
   async function googleSuccess(idToken?: string) {
     if (!idToken) { setError('Google did not return an identity token. Please try again.'); return }
-    setBusy(true)
+    authentication.reset()
     setError('')
-    try { await loginWithGoogle(idToken); await onAuthenticated() } catch (caught) { setError(caught instanceof Error ? caught.message : 'Google sign-in failed') } finally { setBusy(false) }
+    try { await authentication.mutateAsync(() => loginWithGoogle(idToken)) } catch (caught) { setError(caught instanceof Error ? caught.message : 'Google sign-in failed') }
   }
 
   return (
@@ -50,9 +58,9 @@ export function AuthScreen({ onAuthenticated, onDemo }: { onAuthenticated: () =>
         <div className="w-full max-w-97.5" aria-busy={busy}>
           <span className="mb-2 block text-[10px] font-extrabold tracking-[.14em] text-[#75837b] uppercase">Welcome to Finlo</span><h2 className="mt-0 mb-2 font-heading text-[31px] leading-[1.15] font-bold tracking-[-1.2px]">{mode === 'login' ? 'Good to see you again.' : 'Start with a clearer view.'}</h2><p className="text-xs text-muted">{mode === 'login' ? 'Sign in to continue to your finances.' : 'Create your private Finlo account.'}</p>
           <div className="my-6 flex rounded-[11px] bg-[#eef0e9] p-1"><AuthToggle active={mode === 'login'} disabled={busy} onClick={() => { setMode('login'); setError('') }}>Sign in</AuthToggle><AuthToggle active={mode === 'register'} disabled={busy} onClick={() => { setMode('register'); setError('') }}>Create account</AuthToggle></div>
-          <form onSubmit={submit} className="grid gap-3.5">{mode === 'register' && <div className="flex gap-3 max-[540px]:flex-col"><Field label="First name" name="name" autoComplete="given-name" disabled={busy} /><Field label="Last name" name="surname" autoComplete="family-name" disabled={busy} /></div>}<Field label="Email" name="email" type="email" autoComplete="email" placeholder="you@example.com" disabled={busy} /><Field label="Password" name="password" type="password" autoComplete={mode === 'login' ? 'current-password' : 'new-password'} placeholder="At least 8 characters" disabled={busy} /><InlineError message={error} /><button className="inline-flex min-h-10.5 w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-brand bg-brand px-4 text-[13px] font-bold text-white hover:bg-brand-dark disabled:cursor-not-allowed disabled:opacity-60" disabled={busy}>{busy ? <><LoaderCircle className="animate-spin" size={16} /> {mode === 'login' ? 'Signing you in…' : 'Creating your account…'}</> : <>{mode === 'login' ? 'Sign in' : 'Create my account'} <ArrowUpRight size={17} /></>}</button></form>
+          <form onSubmit={submit} className="grid gap-3">{mode === 'register' && <div className="flex gap-2.5 max-[540px]:flex-col"><Field label="First name" name="name" autoComplete="given-name" disabled={busy} /><Field label="Last name" name="surname" autoComplete="family-name" disabled={busy} /></div>}<Field label="Email" name="email" type="email" autoComplete="email" placeholder="you@example.com" disabled={busy} /><Field label="Password" name="password" type="password" autoComplete={mode === 'login' ? 'current-password' : 'new-password'} placeholder="At least 8 characters" disabled={busy} /><InlineError message={error} /><Button variant="primary" fullWidth disabled={busy}>{busy ? <><LoaderCircle className="animate-spin" size={15} /> {mode === 'login' ? 'Signing you in…' : 'Creating your account…'}</> : <>{mode === 'login' ? 'Sign in' : 'Create my account'} <ArrowUpRight size={16} /></>}</Button></form>
           <div className="my-4.5 flex items-center gap-3 text-[9px] text-[#9aa39d] before:h-px before:flex-1 before:bg-line before:content-[''] after:h-px after:flex-1 after:bg-line after:content-['']"><span>or</span></div>
-          {googleClientID ? <div className={`flex justify-center overflow-hidden rounded-[9px] ${busy ? 'pointer-events-none opacity-60' : ''}`}><GoogleLogin onSuccess={(response) => void googleSuccess(response.credential)} onError={() => setError('Google sign-in was cancelled')} width="360" /></div> : <button className="inline-flex min-h-10.5 w-full items-center justify-center gap-2 rounded-xl border border-line bg-white px-4 text-[13px] font-bold" disabled><strong>G</strong> Google sign-in needs a client ID</button>}
+          {googleClientID ? <div className={`flex justify-center overflow-hidden rounded-[9px] ${busy ? 'pointer-events-none opacity-60' : ''}`}><GoogleLogin onSuccess={(response) => void googleSuccess(response.credential)} onError={() => setError('Google sign-in was cancelled')} width="360" /></div> : <Button fullWidth disabled><strong>G</strong> Google sign-in needs a client ID</Button>}
           <button className="mx-auto mt-4.5 flex cursor-pointer items-center gap-1 border-0 bg-transparent text-[10px] font-bold text-[#557360] disabled:cursor-not-allowed disabled:opacity-60" disabled={busy} onClick={onDemo}>Explore with demo data <ArrowUpRight size={15} /></button>
         </div>
       </section>

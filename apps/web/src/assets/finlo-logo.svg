@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 243 90" role="img" aria-labelledby="finlo-logo-title">
+  <title id="finlo-logo-title">Finlo</title>
+  <g fill="#153f2e">
+    <path d="M10 23v-6C10 6 16 1 29 1h12v13h-9c-5 0-6 2-6 7v2h15v13H26v52H10V36H0V23h10Z"/>
+    <path d="M49 1h16v13H49V1Zm0 22h16v65H49V23Z"/>
+    <path d="M78 23h16v8c5-7 12-10 22-10 15 0 23 10 23 26v41h-16V50c0-10-4-15-12-15-10 0-17 7-17 19v34H78V23Z"/>
+    <path d="M150 1h17v87h-17V1Z"/>
+    <path fill-rule="evenodd" d="M209 21c20 0 34 14 34 34s-14 34-34 34-33-14-33-34 13-34 33-34Zm0 15c-10 0-16 7-16 19s6 19 16 19 17-7 17-19-7-19-17-19Z" clip-rule="evenodd"/>
+  </g>
+</svg>

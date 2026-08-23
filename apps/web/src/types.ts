@@ -11,6 +11,15 @@ export type User = {
   avatar_url?: string
 }
 
+export type Category = {
+  id: string
+  name: string
+  type: 'income' | 'expense'
+  sort_order: number
+  created_at?: string
+  updated_at?: string
+}
+
 export type Account = {
   id: string
   name: string
@@ -77,6 +86,7 @@ export type Dashboard = {
 
 export type FinanceData = {
   dashboard: Dashboard
+  categories: Category[]
   accounts: Account[]
   transactions: Transaction[]
   budgets: Budget[]

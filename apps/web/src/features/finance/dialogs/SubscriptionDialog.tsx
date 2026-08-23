@@ -2,12 +2,15 @@ import { useState, type FormEvent } from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
 import { Plus } from 'lucide-react'
 import { createSubscription } from '../../../api'
+import { Button } from '../../../components/ui/Button'
 import { DialogForm, FinanceDialog, FormField, MoneyInput } from '../../../components/ui/FinanceDialog'
 import { InlineError, SubmitButton } from '../../../components/ui/Feedback'
 import { errorMessage } from '../../../lib/format'
 import type { FinanceActions } from '../types'
+import { useFinanceMutation } from '../useFinanceMutation'
 
 export function SubscriptionDialog(props: FinanceActions) {
+  const createMutation = useFinanceMutation(createSubscription)
   const [open, setOpen] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -21,14 +24,14 @@ export function SubscriptionDialog(props: FinanceActions) {
     setError('')
     try {
       if (props.isDemo) { const next = structuredClone(props.data); const subscription = { ...input, id: crypto.randomUUID() }; next.subscriptions.push(subscription); next.dashboard.subscriptions.push(subscription); props.onDemoChange(next) }
-      else { await createSubscription(input); await props.onCreated() }
+      else await createMutation.mutateAsync(input)
       setOpen(false)
     } catch (caught) { setError(errorMessage(caught, 'Could not add subscription.')) } finally { setBusy(false) }
   }
 
   return (
     <Dialog.Root open={open} onOpenChange={(next) => { if (!busy) { setOpen(next); setError('') } }}>
-      <Dialog.Trigger asChild><button className="inline-flex min-h-10.5 cursor-pointer items-center justify-center gap-2 rounded-xl border border-brand bg-brand px-4 text-[13px] font-bold text-white shadow-[0_7px_18px_rgba(21,63,46,.16)] hover:bg-brand-dark"><Plus size={17} /> Add subscription</button></Dialog.Trigger>
+      <Dialog.Trigger asChild><Button variant="primary"><Plus size={16} /> Add subscription</Button></Dialog.Trigger>
       <FinanceDialog busy={busy} eyebrow="Recurring expense" title="Add a subscription" description="Include recurring payments in your monthly picture.">
         <DialogForm onSubmit={submit} spaced>
           <FormField label="Name"><input name="name" placeholder="Netflix" disabled={busy} required /></FormField>

@@ -2,7 +2,7 @@ import { ArrowUpRight } from 'lucide-react'
 
 export function EmptyState({ title, copy, action, onAction, compact = false }: { title: string; copy: string; action?: string; onAction?: () => void; compact?: boolean }) {
   return (
-    <div className={`grid place-items-center px-4.5 text-center ${compact ? 'min-h-27.5 pt-2.5 pb-0.5' : 'min-h-45 py-7'}`}>
+    <div className={`flex flex-1 items-center justify-center px-4 text-center ${compact ? 'min-h-22.5 py-1' : 'min-h-34 py-4'}`}>
       <div className="max-w-90">
         <strong className="mb-1 block font-heading text-[13px] leading-tight font-bold">{title}</strong>
         <p className="m-0 text-[10px] leading-[1.55] text-muted">{copy}</p>
