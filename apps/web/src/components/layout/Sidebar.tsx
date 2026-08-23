@@ -12,7 +12,7 @@ const navItems = [
   { to: routes.planning, label: 'Planning', icon: CalendarRange },
 ]
 
-const navClassName = 'flex min-h-9.5 w-full cursor-pointer items-center gap-2.5 rounded-[9px] px-2.5 py-1.5 text-left text-[13px] font-semibold no-underline transition-[background-color,color,transform] duration-150 ease-out hover:translate-x-0.5 hover:bg-[#f0f2eb] hover:text-ink max-[820px]:min-h-0 max-[820px]:w-auto max-[820px]:flex-1 max-[820px]:flex-col max-[820px]:gap-1 max-[820px]:px-1 max-[820px]:py-1.5 max-[820px]:text-[9px] max-[820px]:hover:translate-x-0'
+const navClassName = 'flex min-h-9.5 w-full cursor-pointer items-center gap-2.5 rounded-[9px] px-2.5 py-1.5 text-left text-[13px] font-semibold no-underline transition-colors duration-150 ease-out hover:bg-[#f0f2eb] hover:text-ink max-[820px]:min-h-0 max-[820px]:w-auto max-[820px]:flex-1 max-[820px]:flex-col max-[820px]:gap-1 max-[820px]:px-1 max-[820px]:py-1.5 max-[820px]:text-[9px]'
 
 function SidebarLink({ icon: Icon, label, to, end = false }: { icon: LucideIcon; label: string; to: string; end?: boolean }) {
   return <NavLink className={({ isActive }) => `${navClassName} ${isActive ? 'bg-[#e8efe6] text-brand' : 'text-[#748078]'}`} to={to} end={end}><Icon className="max-[820px]:w-4" size={17} />{label}</NavLink>

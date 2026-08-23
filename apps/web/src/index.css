@@ -30,14 +30,6 @@
   to { opacity: 0; }
 }
 
-@keyframes pop-in {
-  from { opacity: 0; transform: translate(-50%, -48%) scale(.98); }
-}
-
-@keyframes pop-out {
-  to { opacity: 0; transform: translate(-50%, -49%) scale(.985); }
-}
-
 @keyframes menu-in {
   from { opacity: 0; transform: translateY(4px) scale(.975); }
 }
@@ -48,24 +40,6 @@
 
 @keyframes notice-in {
   from { opacity: 0; transform: translateY(-5px); }
-}
-
-@keyframes currency-cycle {
-  0% {
-    opacity: 0;
-    filter: blur(7px);
-    transform: translateY(42%);
-  }
-  5%, 27% {
-    opacity: 1;
-    filter: blur(0);
-    transform: translateY(0);
-  }
-  33%, 100% {
-    opacity: 0;
-    filter: blur(7px);
-    transform: translateY(-42%);
-  }
 }
 
 @layer base {

@@ -1,7 +1,9 @@
+import { Suspense } from 'react'
 import { AlertCircle, RefreshCw, X } from 'lucide-react'
 import { AnimatePresence } from 'motion/react'
 import { div as MotionDiv } from 'motion/react-m'
 import { useLocation, useOutlet } from 'react-router'
+import { PageLoading } from '@/components/ui/AppStatus'
 import { quickTransition } from '@/lib/motion'
 import type { User } from '@/types'
 import { Sidebar } from './Sidebar'
@@ -49,7 +51,9 @@ export function AppShell({ user, isDemo, refreshing, error, onRetry, onDismissEr
               key={location.pathname}
               transition={quickTransition}
             >
-              {outlet}
+              <Suspense fallback={<PageLoading label="Loading page…" />}>
+                {outlet}
+              </Suspense>
             </MotionDiv>
           </AnimatePresence>
         </main>

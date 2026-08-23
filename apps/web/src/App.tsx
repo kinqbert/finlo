@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react'
+import { lazy } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import * as Tooltip from '@radix-ui/react-tooltip'
 import { Navigate, Outlet, Route, Routes, useLocation, useNavigate } from 'react-router'
@@ -103,7 +103,7 @@ function App() {
 
   return (
     <Tooltip.Provider delayDuration={250}>
-      <Suspense fallback={<LoadingScreen label="Loading page…" />}><Routes>
+      <Routes>
         <Route path={routes.login} element={session === 'guest' ? <AuthPage onAuthenticated={completeAuthentication} onDemo={enterDemo} /> : <Navigate to={routes.overview} replace />} />
         <Route element={<RequireAuthentication authenticated={session !== 'guest'} />}>
           <Route element={<AppShell user={user} isDemo={session === 'demo'} refreshing={refreshing} error={dataError} onRetry={() => void refreshData()} onDismissError={() => setDataError('')} onSignOut={() => void signOut()} />}>
@@ -118,7 +118,7 @@ function App() {
           </Route>
         </Route>
         <Route path="*" element={<Navigate to={session === 'guest' ? routes.login : routes.overview} replace />} />
-      </Routes></Suspense>
+      </Routes>
     </Tooltip.Provider>
   )
 }
