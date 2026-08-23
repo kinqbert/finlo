@@ -8,10 +8,15 @@ DATABASE_URL ?= postgres://$(DB_USER):$(DB_PASSWORD)@$(DB_HOST):$(DB_PORT)/$(DB_
 GOOSE := goose
 MIGRATIONS_DIR := migrations
 BINARY := bin/api
+COMPOSE_FILE := ../compose.yaml
+COMPOSE_ENV_FILE := $(wildcard .env)
+COMPOSE := docker compose $(if $(COMPOSE_ENV_FILE),--env-file $(COMPOSE_ENV_FILE)) -f $(COMPOSE_FILE)
+DB_VOLUME := finlo_postgres-data
 
 .PHONY: help dev build test vet fmt tidy \
 	migration-create migration-up migration-down \
-	migration-redo migration-status migration-version
+	migration-redo migration-status migration-version \
+	db-up db-down db-status db-migrate db-setup db-reset
 
 help:
 	@echo "Available commands:"
@@ -26,6 +31,12 @@ help:
 	@echo "  make migration-down"
 	@echo "  make migration-redo"
 	@echo "  make migration-status"
+	@echo "  make db-up              Start the local PostgreSQL container"
+	@echo "  make db-down            Stop local Docker services"
+	@echo "  make db-status          Show local Docker service status"
+	@echo "  make db-migrate         Apply migrations in Docker"
+	@echo "  make db-setup           Start PostgreSQL and apply migrations"
+	@echo "  make db-reset CONFIRM=1 Permanently reset the local database"
 
 dev:
 	go run ./cmd/api
@@ -65,3 +76,23 @@ migration-status:
 
 migration-version:
 	$(GOOSE) -dir $(MIGRATIONS_DIR) postgres "$(DATABASE_URL)" version
+
+db-up:
+	$(COMPOSE) up -d --wait db
+
+db-down:
+	$(COMPOSE) down
+
+db-status:
+	$(COMPOSE) ps
+
+db-migrate:
+	$(COMPOSE) run --rm migrate
+
+db-setup: db-up db-migrate
+
+db-reset:
+	@test "$(CONFIRM)" = "1" || (echo "Refusing to delete local database data. Re-run with: make db-reset CONFIRM=1" && exit 1)
+	$(COMPOSE) down
+	@if docker volume inspect $(DB_VOLUME) >/dev/null 2>&1; then docker volume rm $(DB_VOLUME); fi
+	$(MAKE) db-setup
