@@ -1,4 +1,4 @@
-package finance
+package model
 
 import (
 	"time"
@@ -11,6 +11,7 @@ type Category struct {
 	UserID    string    `json:"-" gorm:"index;not null"`
 	Name      string    `json:"name" gorm:"not null"`
 	Type      string    `json:"type" gorm:"not null"`
+	SortOrder int       `json:"sort_order" gorm:"not null"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
